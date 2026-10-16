@@ -44,8 +44,6 @@ jobs:
           </body>
           </html>
           HTML
-          printf '%s
-' '手绘风格与排版图型图鉴，原作者 yang0。源项目：https://github.com/yang0/handraw-style' > site/ATTRIBUTION.txt
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload the site artifact
