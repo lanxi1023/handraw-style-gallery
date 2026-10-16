@@ -1,0 +1,57 @@
+name: Publish hand-drawn style gallery
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the original public repository
+        uses: actions/checkout@v6
+        with:
+          repository: yang0/handraw-style
+          ref: master
+          path: upstream
+      - name: Prepare the gallery site
+        run: |
+          mkdir -p site/images site/skills/handdraw-style-prompter
+          cp -a upstream/images/. site/images/
+          cp -a upstream/skills/handdraw-style-prompter/gallery site/skills/handdraw-style-prompter/
+          cp upstream/LICENSE site/LICENSE
+          cat > site/index.html <<'HTML'
+          <!doctype html>
+          <html lang="zh-CN">
+          <head>
+            <meta charset="utf-8">
+            <meta http-equiv="refresh" content="0; url=skills/handdraw-style-prompter/gallery/index.html">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>手绘风格图鉴 · Hand-drawn Style Gallery</title>
+          </head>
+          <body>
+            <p>正在打开手绘风格图鉴…若页面没有自动跳转，请<a href="skills/handdraw-style-prompter/gallery/index.html">点击这里</a>。</p>
+            <p>原作者：yang0。源项目与许可：<a href="https://github.com/yang0/handraw-style">github.com/yang0/handraw-style</a></p>
+          </body>
+          </html>
+          HTML
+          printf '%s
+' '手绘风格与排版图型图鉴，原作者 yang0。源项目：https://github.com/yang0/handraw-style' > site/ATTRIBUTION.txt
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload the site artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
