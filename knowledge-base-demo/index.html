@@ -16,13 +16,85 @@
 @media(max-width:1100px){.aside{width:175px}.main{padding:22px 16px}.stat{padding:16px 12px}.stat-num{font-size:26px}.card{padding:15px}.cols{grid-template-columns:1.25fr 1fr}}
 @media(max-width:760px){.shell{display:block}.aside{width:100%;display:block;padding:12px;border-right:0;border-bottom:1px solid #26517f}.aside:after,.sidenote,.navtitle{display:none}.brand{margin:0 0 12px}.brand strong{font-size:14px}.logo{height:32px;width:32px;font-size:19px}.nav{width:auto;display:inline-flex;padding:9px 12px;margin:0 5px 2px 0;font-size:11px;gap:6px}.nav .ico{width:auto;font-size:15px}.main{padding:18px 12px}.header{flex-wrap:wrap}.headline h1{font-size:23px}.globalbar{width:100%}.search{width:auto;min-width:0;flex:1}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.cols,.cols.equal{grid-template-columns:1fr}.avatar{display:none}.date{display:none}.stat-num{font-size:25px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Desktop widescreen workspace. Below 761px the original mobile layout is unchanged. */
+.desktop-intro{display:none}
+@media(min-width:1101px){
+ html{background:#020918}
+ .shell{min-height:100vh}
+ .aside{width:232px;position:sticky;top:0;height:100vh;padding:31px 16px;box-shadow:7px 0 45px #0003}
+ .brand{margin-bottom:58px}
+ .nav{font-size:14px;margin-bottom:12px;padding:17px 15px}
+ .nav .ico{font-size:21px}
+ .main{padding:29px clamp(24px,3.2vw,62px) 46px;max-width:1920px;margin-left:auto;margin-right:auto}
+ .header{min-height:58px;padding-bottom:5px}
+ .headline h1{font-size:30px}
+ .headline p{font-size:12px;margin-top:8px}
+ .globalbar{gap:12px}
+ .search{width:clamp(235px,22vw,355px);padding:13px 16px;font-size:12px}
+ .avatar{width:39px;height:39px}
+ .overline{margin:20px 0 19px;font-size:11px}
+ .desktop-intro{display:grid;grid-template-columns:minmax(250px,1fr) minmax(450px,1.35fr);gap:15px;align-items:center;border:1px solid #2b6b9e;background:radial-gradient(ellipse at 78% 24%,#0c5a9a52,transparent 60%),linear-gradient(105deg,#081f3f,#082a55 58%,#061c37);padding:19px 23px;margin-bottom:17px;border-radius:13px;position:relative;overflow:hidden;min-height:109px}
+ .desktop-intro:after{content:"";pointer-events:none;position:absolute;inset:0;background:linear-gradient(110deg,transparent 42%,#46d9ff09 47%,transparent 54%);animation:deskSweep 8s linear infinite}
+ .desk-kicker{font-size:10px;font-weight:800;color:#58d9fa;letter-spacing:2px;display:block;margin-bottom:6px}
+ .desktop-intro h2{font-size:20px;line-height:1.55;margin:0 0 7px;font-weight:800;letter-spacing:.5px}
+ .desktop-intro p{margin:0;font-size:11px;color:#97b8d6}
+ .desk-track{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;align-items:stretch}
+ .desk-node{position:relative;text-align:center;padding:13px 6px;background:#0a315d;border:1px solid #3374a5;border-radius:9px;box-shadow:inset 0 0 16px #0b70c13b}
+ .desk-node:not(:last-child):after{content:"›";position:absolute;top:28px;right:-13px;color:#3de0ff;font-size:22px;z-index:2;text-shadow:0 0 8px #18ceff}
+ .desk-node b{display:block;font-size:11px;letter-spacing:.5px;color:#e5f6ff}
+ .desk-node small{font-size:9px;display:block;color:#8eb7db;margin-top:6px}
+ .desk-node .node-ico{display:block;font-size:20px;color:#50dfff;margin-bottom:5px;text-shadow:0 0 12px #26b9ff}
+ .stats{gap:16px;margin-bottom:17px}
+ .stat{padding:21px 21px;min-height:143px}
+ .stat-label{font-size:12px}
+ .stat-num{font-size:34px;margin-top:10px}
+ .stat-sub{font-size:11px}
+ .cols{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px;margin-bottom:16px}
+ .cols.equal{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .card{padding:21px 23px}
+ .cardhead{margin-bottom:17px}
+ .cardhead h2{font-size:16px}
+ .cardhead p{font-size:11px}
+ .askline{margin-top:19px;margin-bottom:14px}
+ .askline input{padding:14px 15px;font-size:13px}
+ .answer{padding:17px 18px;min-height:135px}
+ .answer p{font-size:13px}
+ .steps{gap:9px}
+ .step{padding:16px 6px}
+ .step strong{font-size:11px}
+ .chartline{margin-top:23px;padding-top:19px}
+ .item-title strong{font-size:12px}
+ .item-title small{font-size:11px}
+ .notice{padding:15px 1px}
+ #workflow .cols{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)}
+ #workflow .flowstep{padding:15px 0}
+ #knowledge .table th{font-size:11px}
+ #knowledge .table td{padding:17px 12px;font-size:12px}
+ #knowledge .card:first-of-type{padding-top:24px}
+ .desktop-fullscreen{display:inline-flex}
+}
+@media(min-width:761px) and (max-width:1100px){.desktop-intro{display:none}.desktop-fullscreen{display:none}}
+@media(max-width:760px){.desktop-intro,.desktop-fullscreen{display:none!important}}
+@media(min-width:1700px){.main{padding-left:56px;padding-right:56px}.desktop-intro{min-height:130px}.desk-node{padding:17px 9px}.stat{min-height:157px}}
+@media(prefers-reduced-motion:reduce){.desktop-intro:after{animation:none}}
+@keyframes deskSweep{from{transform:translateX(-70%)}to{transform:translateX(120%)}}
 </style></head><body><div class="shell">
 <aside class="aside"><div class="brand"><div class="logo">▣</div><div><strong>组织知识中枢</strong><small>KNOWLEDGE OS · 2026</small></div></div><div class="navtitle">核心工作空间</div>
 <nav aria-label="三大模块"><button class="nav active" data-page="overview"><span class="ico">⌂</span> 总览</button><button class="nav" data-page="knowledge"><span class="ico">▤</span> 工作知识库</button><button class="nav" data-page="workflow"><span class="ico">⤨</span> 工作流程</button></nav>
 <div class="sidenote"><strong>◈ ONE KNOWLEDGE BASE</strong>一个知识底座<br>一套有效版本<br>一条经验传承链<hr><div>纯静态交互演示 · 非正式系统</div></div></aside>
-<main class="main"><header class="header"><div class="headline"><h1 id="pageTitle">知识库总览</h1><p id="pageDesc">统一入口 · 可信知识 · 让经验不随人离开</p></div><div class="globalbar"><input id="search" class="search" placeholder="⌕ 搜索制度、项目、经验、流程…" aria-label="搜索演示知识"><button class="btn" id="jumpAI">✧ 智能问答</button><div class="avatar"></div></div></header>
+<main class="main"><header class="header"><div class="headline"><h1 id="pageTitle">知识库总览</h1><p id="pageDesc">统一入口 · 可信知识 · 让经验不随人离开</p></div><div class="globalbar"><input id="search" class="search" placeholder="⌕ 搜索制度、项目、经验、流程…" aria-label="搜索演示知识"><button class="btn" id="jumpAI">✧ 智能问答</button><button class="btn desktop-fullscreen" id="screenMode" aria-label="切换电脑大屏模式">⛶ 大屏模式</button><div class="avatar"></div></div></header>
 <div class="overline"><span class="live"></span>统一知识底座　/　归档、状态、检索统一治理 <span class="date">演示数据截至：2026.10.19</span></div>
 <section class="page active" id="overview">
+<div class="desktop-intro" aria-label="桌面知识沉淀链路">
+ <div><span class="desk-kicker">ENTERPRISE KNOWLEDGE · ONE SOURCE OF TRUTH</span><h2>资料能查到 · 版本能确认 · 经验能传承</h2><p>不是新的 OA / ERP，而是一个让知识长期有效的统一底座。</p></div>
+ <div class="desk-track">
+  <div class="desk-node"><span class="node-ico">⇧</span><b>统一入库</b><small>多来源资料</small></div>
+  <div class="desk-node"><span class="node-ico">✧</span><b>AI 辅助归档</b><small>分类与建台账</small></div>
+  <div class="desk-node"><span class="node-ico">✓</span><b>有效版本</b><small>责任人复核</small></div>
+  <div class="desk-node"><span class="node-ico">⌕</span><b>随问随查</b><small>原文可追溯</small></div>
+ </div>
+</div>
 <div class="stats"><div class="stat"><div class="stat-label"><span class="stat-icon">▤</span> 知识条目</div><div class="stat-num">1,284</div><div class="stat-sub">统一沉淀 <b>↑ 12%</b></div><div class="spark"><span style="--h:8px"></span><span style="--h:14px"></span><span style="--h:19px"></span><span style="--h:24px"></span></div></div>
 <div class="stat"><div class="stat-label"><span class="stat-icon teal">✓</span> 现行有效</div><div class="stat-num">1,136</div><div class="stat-sub">有效率 <b>88.5%</b></div><div class="spark teal"><span style="--h:9px"></span><span style="--h:14px"></span><span style="--h:20px"></span><span style="--h:25px"></span></div></div>
 <div class="stat"><div class="stat-label"><span class="stat-icon gold">!</span> 待复核知识</div><div class="stat-num">21</div><div class="stat-sub">需责任人处理</div><div class="spark gold"><span style="--h:24px"></span><span style="--h:18px"></span><span style="--h:12px"></span><span style="--h:7px"></span></div></div>
@@ -90,7 +162,7 @@ function renderFlow(){let f=flows[flowIndex];$("#flowTabs").innerHTML=flows.map(
 let timer;function toast(s){let t=$("#toast");t.textContent=s;t.classList.add("show");clearTimeout(timer);timer=setTimeout(()=>t.classList.remove("show"),4500);}
 function importDemo(){if(!imported){docs.unshift({id:11,name:"新导入：客户交接经验（模拟样例）",cat:"经验案例",v:"待核验",state:"待复核",owner:"待分配 · 知识管理员",date:"2026-10-19",effective:"待确认",detail:"这是模拟导入的示例条目。系统建议分类为经验案例、记录日期并生成台账候选。未调用真实AI，也没有上传真实文档。"});imported=true;toast("已生成模拟归档候选：状态为“待复核”，需人工确认后才可引用。")}else toast("模拟归档条目已存在，请在文档台账第一行查看。");cat="全部";onlyReview=false;query="";$("#search").value="";page("knowledge");}
 document.addEventListener("click",e=>{let b=e.target.closest("button,[data-doc]");if(!b)return;if(b.dataset.doc){showDoc(b.dataset.doc);return}if(b.dataset.page){page(b.dataset.page);return}if(b.dataset.question){$("#askInput").value=b.dataset.question;ask();return}if(b.dataset.cat){cat=b.dataset.cat;onlyReview=false;renderDocs();return}if(b.dataset.flow!==undefined){flowIndex=Number(b.dataset.flow);renderFlow();return}if(b.dataset.review){cat="全部";onlyReview=true;page("knowledge");return}});
-$("#askButton").addEventListener("click",ask);$("#askInput").addEventListener("keydown",e=>{if(e.key==="Enter")ask()});$("#importButton").addEventListener("click",importDemo);$("#importButton2").addEventListener("click",importDemo);$("#jumpAI").addEventListener("click",()=>{page("overview");$("#askInput").focus()});$("#resetFilter").addEventListener("click",()=>{cat="全部";onlyReview=false;query="";$("#search").value="";renderDocs()});$("#search").addEventListener("keydown",e=>{if(e.key==="Enter"){query=e.target.value;cat="全部";onlyReview=false;page("knowledge")}});$("#closeModal").addEventListener("click",()=>$("#modal").classList.remove("open"));$("#modal").addEventListener("click",e=>{if(e.target===$("#modal"))$("#modal").classList.remove("open")});document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#modal").classList.remove("open")});renderDocs();renderFlow();
+$("#screenMode").addEventListener("click",async()=>{try{if(document.fullscreenElement){await document.exitFullscreen()}else if(document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen()}else{toast("当前浏览器不支持网页全屏，可使用浏览器全屏快捷键。")}}catch(e){toast("浏览器未允许进入全屏，请使用全屏快捷键。")}});document.addEventListener("fullscreenchange",()=>{$("#screenMode").textContent=document.fullscreenElement?"⤡ 退出大屏":"⛶ 大屏模式"});$("#askButton").addEventListener("click",ask);$("#askInput").addEventListener("keydown",e=>{if(e.key==="Enter")ask()});$("#importButton").addEventListener("click",importDemo);$("#importButton2").addEventListener("click",importDemo);$("#jumpAI").addEventListener("click",()=>{page("overview");$("#askInput").focus()});$("#resetFilter").addEventListener("click",()=>{cat="全部";onlyReview=false;query="";$("#search").value="";renderDocs()});$("#search").addEventListener("keydown",e=>{if(e.key==="Enter"){query=e.target.value;cat="全部";onlyReview=false;page("knowledge")}});$("#closeModal").addEventListener("click",()=>$("#modal").classList.remove("open"));$("#modal").addEventListener("click",e=>{if(e.target===$("#modal"))$("#modal").classList.remove("open")});document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#modal").classList.remove("open")});renderDocs();renderFlow();
 })();
 </script>
 </body></html>
