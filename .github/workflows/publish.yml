@@ -17,6 +17,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      - name: Check out this repository for the knowledge base demo
+        uses: actions/checkout@v6
+        with:
+          path: site-source
       - name: Check out the original public repository
         uses: actions/checkout@v6
         with:
@@ -44,6 +48,10 @@ jobs:
           </body>
           </html>
           HTML
+      - name: Include independent knowledge base demo
+        run: |
+          mkdir -p site/knowledge-base-demo
+          cp site-source/knowledge-base-demo/index.html site/knowledge-base-demo/index.html
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload the site artifact
