@@ -79,12 +79,20 @@
 @media(min-width:1700px){.main{padding-left:56px;padding-right:56px}.desktop-intro{min-height:130px}.desk-node{padding:17px 9px}.stat{min-height:157px}}
 @media(prefers-reduced-motion:reduce){.desktop-intro:after{animation:none}}
 @keyframes deskSweep{from{transform:translateX(-70%)}to{transform:translateX(120%)}}
+
+/* Visible test-environment label shared by desktop and mobile */
+.test-mark{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;padding:7px 12px;border-radius:8px;border:1px solid #237cb0;background:linear-gradient(110deg,#0c3158,#0b2545);color:#dff6ff;box-shadow:0 0 14px #1686f82b,inset 0 1px #73d9ff18;font-size:11px}
+.test-mark b{font-size:12px;color:#69e4ff;letter-spacing:1.2px;text-shadow:0 0 9px #1686f86b}
+.test-mark small{font-size:10px;color:#9bbad8;border-left:1px solid #315a80;padding-left:7px}
+.test-dot{width:7px;height:7px;flex:none;border-radius:50%;background:#42edc6;box-shadow:0 0 9px #42edc6;animation:pulse 2s infinite}
+@media(max-width:760px){.test-mark{padding:6px 9px;gap:6px}.test-mark b{font-size:11px}.test-mark small{font-size:9px}.overline{flex-wrap:wrap;gap:8px}.date{margin-left:auto}}
+
 </style></head><body><div class="shell">
 <aside class="aside"><div class="brand"><div class="logo">▣</div><div><strong>组织知识中枢</strong><small>KNOWLEDGE OS · 2026</small></div></div><div class="navtitle">核心工作空间</div>
 <nav aria-label="三大模块"><button class="nav active" data-page="overview"><span class="ico">⌂</span> 总览</button><button class="nav" data-page="knowledge"><span class="ico">▤</span> 工作知识库</button><button class="nav" data-page="workflow"><span class="ico">⤨</span> 工作流程</button></nav>
 <div class="sidenote"><strong>◈ ONE KNOWLEDGE BASE</strong>一个知识底座<br>一套有效版本<br>一条经验传承链<hr><div>纯静态交互演示 · 非正式系统</div></div></aside>
 <main class="main"><header class="header"><div class="headline"><h1 id="pageTitle">知识库总览</h1><p id="pageDesc">统一入口 · 可信知识 · 让经验不随人离开</p></div><div class="globalbar"><input id="search" class="search" placeholder="⌕ 搜索制度、项目、经验、流程…" aria-label="搜索演示知识"><button class="btn" id="jumpAI">✧ 智能问答</button><button class="btn desktop-fullscreen" id="screenMode" aria-label="切换电脑大屏模式">⛶ 大屏模式</button><div class="avatar"></div></div></header>
-<div class="overline"><span class="live"></span>统一知识底座　/　归档、状态、检索统一治理 <span class="date">演示数据截至：2026.10.19</span></div>
+<div class="overline"><span class="live"></span>统一知识底座　/　归档、状态、检索统一治理 <span class="date">演示数据截至：2026.10.19</span><span class="test-mark"><span class="test-dot"></span><b>蓝熙测试</b><small>测试环境</small></span></div>
 <section class="page active" id="overview">
 <div class="desktop-intro" aria-label="桌面知识沉淀链路">
  <div><span class="desk-kicker">ENTERPRISE KNOWLEDGE · ONE SOURCE OF TRUTH</span><h2>资料能查到 · 版本能确认 · 经验能传承</h2><p>不是新的 OA / ERP，而是一个让知识长期有效的统一底座。</p></div>
