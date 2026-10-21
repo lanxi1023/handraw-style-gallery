@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>工作知识库 · 蓝熙测试</title>
+<style>
+ :root{color-scheme:light;--bg:#030d21;--card:#081c3b;--line:#225180;--cyan:#2cdaff;--txt:#eaf5ff;--muted:#84a6ca;--mint:#3fe6c7;--amber:#ffc277;--purple:#b39aff}
+*{box-sizing:border-box}body{margin:0;background:#020b1b;font-family:Inter,system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--txt);font-size:13px}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.shell{display:flex;min-height:100vh;background:radial-gradient(ellipse at 80% -4%,#124b82a8,transparent 39%),radial-gradient(ellipse at 1% 97%,#0b3567,transparent 36%),#030d21}.aside{width:215px;flex-shrink:0;padding:30px 13px;background:linear-gradient(180deg,#071832,#061b3a 70%,#041126);border-right:1px solid #1a4274;position:relative;overflow:hidden;display:flex;flex-direction:column}.aside:after{content:"";position:absolute;width:240px;height:240px;bottom:23px;left:-100px;border:1px solid #1374bd;border-radius:50%;box-shadow:0 0 52px #1874ee44;pointer-events:none}
+.brand{display:flex;align-items:center;gap:12px;margin:0 8px 42px}.logo{height:40px;width:40px;border-radius:12px;display:grid;place-items:center;font-size:24px;font-weight:800;background:linear-gradient(125deg,#3ceaff,#1873ec);box-shadow:0 0 22px #1d85f777}.brand strong{font-size:16px;letter-spacing:.7px}.brand small{display:block;font-size:10px;margin-top:6px;color:#83a6c7;letter-spacing:1.2px}.navtitle{font-size:10px;letter-spacing:3px;color:#628bb9;margin:0 13px 14px}.nav{width:100%;background:transparent;border:1px solid transparent;color:#b3cde9;text-align:left;padding:16px 14px;border-radius:11px;margin:0 0 9px;display:flex;align-items:center;gap:12px;font-weight:650;transition:.15s}.nav .ico{font-size:20px;width:23px;text-align:center;color:#82baff}.nav:hover{background:#103762}.nav.active{background:linear-gradient(95deg,#0759a9,#10396e);border-color:#29bfff;box-shadow:0 0 16px #137bfa55,inset 0 0 18px #137bfa39;color:white}.nav.active .ico{color:white}.sidenote{margin-top:auto;padding:20px 13px;font-size:11px;line-height:2.1;color:#8baed4;position:relative;z-index:1}.sidenote strong{display:block;color:#37d9ff;letter-spacing:1px;margin-bottom:9px}.sidenote hr{height:2px;width:36px;border:0;background:#33ceff;box-shadow:0 0 8px #33ceff;margin:18px 0}
+.main{min-width:0;flex:1;padding:24px 28px 40px;position:relative}.main:before{content:"";position:absolute;top:0;right:0;width:55%;height:180px;background:repeating-radial-gradient(ellipse at 100% -30%,transparent 0 20px,#35afff15 21px 22px,transparent 23px 44px);pointer-events:none}.header{display:flex;align-items:center;justify-content:space-between;gap:15px;position:relative}.headline h1{font-size:28px;margin:0 0 6px;letter-spacing:.8px}.headline h1:before{content:"";display:inline-block;width:5px;height:26px;border-radius:5px;background:linear-gradient(#35efff,#1176fa);box-shadow:0 0 12px #31bcff;margin-right:13px;vertical-align:-3px}.headline p{margin:0 0 0 18px;color:#9cb8d8;font-size:12px}.globalbar{display:flex;gap:9px;align-items:center}.search{width:min(275px,26vw);min-width:150px;background:#0a264c8f;border:1px solid #3375b1;color:#fff;border-radius:8px;padding:11px 13px}.search::placeholder,input::placeholder{color:#779abd}.btn{background:#0d335e;color:#ccecff;border:1px solid #2b70a5;border-radius:8px;padding:10px 13px;font-size:12px;font-weight:650}.btn:hover{border-color:#3adeff;background:#114b81}.btn.primary{background:linear-gradient(115deg,#1477db,#0750ab);border-color:#25caff;color:white;box-shadow:0 0 15px #1196ff54}.avatar{height:35px;width:35px;flex:none;border-radius:100%;background:radial-gradient(circle at 30% 30%,#5af2ff,#1c62e9 55%,#082758);border:1px solid #6ce0ff;box-shadow:0 0 12px #167dec}.overline{margin:20px 0;color:#86acd3;font-size:11px;display:flex;align-items:center;gap:9px}.live{display:inline-block;height:7px;width:7px;background:var(--mint);border-radius:50%;box-shadow:0 0 9px #3fe6c7;animation:pulse 2s infinite}.date{margin-left:auto}
+.page{display:none;animation:appear .3s}.page.active{display:block}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:13px}.stat{min-width:0;border-radius:12px;border:1px solid #2263a1;background:linear-gradient(140deg,#0b2a55,#071831 78%);padding:19px 17px;box-shadow:inset 0 1px #4699ed2d,0 5px 20px #0002;position:relative;overflow:hidden}.stat:after{content:"";position:absolute;height:2px;left:18%;right:18%;bottom:0;background:linear-gradient(90deg,transparent,#268eff,transparent);box-shadow:0 0 10px #248aff}.stat-label{display:flex;align-items:center;gap:11px;font-size:11px;color:#d0e6ff;font-weight:700}.stat-icon{flex:none;width:39px;height:39px;border:1px solid #3188dd;border-radius:10px;background:#124984;color:#61c7ff;display:grid;place-items:center;font-size:21px;box-shadow:0 0 16px #0d7cde44}.stat-icon.teal{background:#094f4a;color:#54e9ce;border-color:#24b8a5}.stat-icon.gold{background:#584024;color:#ffbc66;border-color:#aa7a43}.stat-icon.purple{background:#392b75;color:#c3a5ff;border-color:#7761df}.stat-num{font-size:30px;line-height:1.35;font-weight:800;margin:10px 0 4px;letter-spacing:-1px}.stat-sub{font-size:10px;color:#85a6ca}.stat-sub b{color:#45e5c1}.spark{height:24px;display:flex;gap:3px;align-items:end;justify-content:flex-end;position:absolute;right:16px;bottom:19px}.spark span{height:var(--h);width:5px;background:linear-gradient(#4de2ff,#167cf3);border-radius:2px 2px 0 0;animation:grow .65s both}.spark.gold span{background:linear-gradient(#ffd18f,#ef8b48)}.spark.teal span{background:linear-gradient(#63ffe3,#13a994)}.spark.purple span{background:linear-gradient(#cfb4ff,#7d56ed)}
+.cols{display:grid;grid-template-columns:minmax(0,1.48fr) minmax(0,1fr);gap:13px;margin-bottom:13px}.cols.equal{grid-template-columns:1fr 1fr}.card{min-width:0;padding:18px;border:1px solid #235a93;border-radius:12px;background:linear-gradient(145deg,#09254bef,#061830);box-shadow:inset 0 1px #469cf726,0 8px 20px #0002;position:relative}.card:before{content:"";position:absolute;top:17px;left:0;height:27px;width:2px;background:#18c6ff;box-shadow:0 0 12px #16bbff}.card.qa{background:radial-gradient(ellipse at 92% 0%,#11568b8c,transparent 45%),linear-gradient(145deg,#0a2d56,#061831)}.cardhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.cardhead h2{font-size:15px;margin:0;font-weight:750}.cardhead h2 span{color:#42d8ff;font-size:19px;margin-right:7px;text-shadow:0 0 12px #09adff}.cardhead p{font-size:10px;color:#84a5c9;margin:5px 0 0}.tag{font-size:10px;white-space:nowrap;border-radius:5px;padding:4px 7px;display:inline-flex;align-items:center;font-weight:700}.tag.good{background:#0b4c49;color:#48f4d0}.tag.warn{background:#523b27;color:#ffc17b}.tag.old{background:#4b2c3c;color:#ff9eba}.tag.blue{background:#123c75;color:#85cfff}
+.askline{display:flex;gap:8px;margin:15px 0 12px}.askline input{flex:1;min-width:0;background:#03182f;color:#fff;border:1px solid #296eaa;border-radius:9px;padding:12px}.chips{display:flex;gap:7px;flex-wrap:wrap}.chip{border:1px solid #295982;background:#0d345f;border-radius:16px;padding:7px 10px;color:#b6d9f8;font-size:10px}.chip:hover{border-color:#2ddfff}.answer{margin-top:14px;border:1px solid #26689d;border-radius:9px;background:#041b39;padding:15px;min-height:116px}.answer .lead{color:#51e9c5;font-size:10px;font-weight:800;margin:0 0 7px}.answer p{font-size:12px;line-height:1.95;margin:0;color:#e2efff}.sources{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid #225077}.source{font-size:10px;border:1px solid #2d76b8;background:#0d3058;color:#85cdff;padding:7px 9px;border-radius:6px}.source:hover{color:white;border-color:#35daff}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.step{padding:13px 5px;text-align:center;border-radius:9px;background:#0b3055;border:1px solid #27608e}.step i{display:block;color:#53d5ff;font-size:24px;font-style:normal;margin-bottom:8px}.step strong{font-size:10px}.desc{font-size:11px;line-height:1.9;color:#a4bfdd;margin:13px 0}.chartline{border-top:1px solid #244970;padding-top:15px;margin-top:17px;display:flex;gap:19px;align-items:center}.ring{width:103px;height:103px;flex:none;border-radius:100%;background:conic-gradient(#2195ff 0 88.5%,#ffb365 88.5% 96%,#ae8bff 96%);display:grid;place-items:center;box-shadow:0 0 25px #0b7bdb59}.ring div{width:73px;height:73px;border-radius:100%;display:grid;place-content:center;background:#061c3b;text-align:center;font-weight:800;font-size:18px}.ring small{font-size:9px;font-weight:400;color:#9bb8dc}.leg{flex:1}.legrow{display:flex;align-items:center;gap:8px;font-size:11px;color:#b5cce6;margin:11px 0}.legrow b{margin-left:auto;color:#e9f7ff}.dot{height:8px;width:8px;border-radius:100%;display:inline-block}.item{display:flex;gap:11px;align-items:center;padding:13px 2px;border-bottom:1px solid #173a65}.item:last-child{border-bottom:0}.item-icon{flex:none;background:#124b88;color:#bfe9ff;width:34px;height:36px;display:grid;place-items:center;border-radius:8px;font-size:19px}.item-title{flex:1;min-width:0}.item-title strong{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item-title small{display:block;color:#87a6cb;font-size:10px;margin-top:5px}.action-link{background:transparent;border:0;color:#4cd4ff;font-size:11px;padding:6px 0;white-space:nowrap}.action-link:hover{text-decoration:underline}.notice{display:flex;align-items:center;gap:10px;border-bottom:1px solid #163c65;padding:13px 0}.notice:last-child{border:0}.notice .content{flex:1}.notice .content strong{display:block;font-size:11px}.notice .content small{display:block;font-size:10px;color:#8daed1;margin-top:5px}.notice button{background:#0b345f;border:1px solid #226da5;color:#5bd9ff;border-radius:6px;font-size:10px;padding:7px 10px}.muted{color:#8cadd0;font-size:11px}.tip{border-radius:9px;border:1px solid #2b5c88;background:#082b4e;padding:13px;font-size:11px;line-height:1.9;color:#abc8e6}.tip strong{color:#fff}.tableWrap{overflow-x:auto}.table{border-collapse:collapse;width:100%;min-width:700px}.table th{text-align:left;font-size:10px;background:#0a2e55;color:#93b9e0;padding:14px 11px}.table td{padding:14px 11px;border-bottom:1px solid #1b4269;font-size:11px;color:#c0d5ec}.table tbody tr{cursor:pointer}.table tbody tr:hover{background:#10416b}.table .name{color:#f2f9ff;font-weight:700}.filters{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.filter{border:1px solid #26547d;border-radius:8px;background:#092646;color:#a9c5e3;padding:8px 12px;font-size:11px}.filter.active{border-color:#2dcfff;background:#12508b;color:#fff}.footrow{display:flex;align-items:center;justify-content:space-between;color:#7da3c7;font-size:10px;margin-top:12px}.banner{padding:16px 18px;border:1px solid #2e72a9;background:linear-gradient(100deg,#0a3865,#0a1d3a);border-radius:10px;margin-bottom:13px}.banner strong{font-size:13px}.banner p{color:#a5c3e1;margin:6px 0 0;font-size:11px;line-height:1.7}.flowtabs{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0 15px}.flowtab{border:1px solid #2b5b87;background:#09274b;padding:10px 13px;color:#aac8ea;border-radius:8px;font-size:12px}.flowtab.active{border-color:#36d9ff;background:#12538d;color:white;box-shadow:0 0 11px #1896ff50}.flowstep{padding:14px 0;display:flex;gap:12px;border-bottom:1px solid #1b4168}.flowstep:last-child{border:0}.num{width:30px;height:30px;flex:none;border-radius:9px;border:1px solid #2684c6;background:#10508c;color:#5dddff;font-weight:800;display:grid;place-items:center}.flowstep strong{font-size:12px}.flowstep p{color:#9bb8d6;line-height:1.8;font-size:11px;margin:6px 0 0}.mistake{margin:10px 0;border-left:3px solid #f5ab5f;background:#3d2b223c;padding:12px;color:#e2cbb7;font-size:11px;line-height:1.8}
+.modal{display:none;position:fixed;inset:0;background:#020813bb;z-index:10;justify-content:flex-end}.modal.open{display:flex}.drawer{width:min(470px,100%);overflow-y:auto;height:100%;background:linear-gradient(#0b2c55,#06152b);border-left:1px solid #3989c3;box-shadow:-15px 0 45px #000a;padding:28px}.drawerClose{float:right;background:#103b66;color:#e5f5ff;border:1px solid #3d79a9;border-radius:7px;padding:7px 12px}.drawer h2{font-size:22px;line-height:1.5;margin:26px 0 12px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:19px 0}.field{padding:12px;background:#0b2443;border:1px solid #28537c;border-radius:8px}.field small{display:block;color:#82a7c9;font-size:10px;margin-bottom:6px}.field b{font-size:12px}.drawer p{font-size:12px;line-height:1.9;color:#bcd2ea}.toast{display:none;position:fixed;bottom:28px;right:25px;max-width:400px;background:#0e4264;border:1px solid #37dcf7;box-shadow:0 0 22px #0ab2d980;padding:14px 17px;border-radius:9px;z-index:20;font-size:12px}.toast.show{display:block}.hintcaption{font-size:10px;color:#829fc3;margin:13px 0}
+@keyframes pulse{50%{opacity:.4;box-shadow:0 0 19px #3fe6c7}}@keyframes appear{from{opacity:.3;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes grow{from{transform:scaleY(.2);transform-origin:bottom}to{transform:scaleY(1)}}
+@media(max-width:1100px){.aside{width:175px}.main{padding:22px 16px}.stat{padding:16px 12px}.stat-num{font-size:26px}.card{padding:15px}.cols{grid-template-columns:1.25fr 1fr}}
+@media(max-width:760px){.shell{display:block}.aside{width:100%;display:block;padding:12px;border-right:0;border-bottom:1px solid #26517f}.aside:after,.sidenote,.navtitle{display:none}.brand{margin:0 0 12px}.brand strong{font-size:14px}.logo{height:32px;width:32px;font-size:19px}.nav{width:auto;display:inline-flex;padding:9px 12px;margin:0 5px 2px 0;font-size:11px;gap:6px}.nav .ico{width:auto;font-size:15px}.main{padding:18px 12px}.header{flex-wrap:wrap}.headline h1{font-size:23px}.globalbar{width:100%}.search{width:auto;min-width:0;flex:1}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.cols,.cols.equal{grid-template-columns:1fr}.avatar{display:none}.date{display:none}.stat-num{font-size:25px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Desktop widescreen workspace. Below 761px the original mobile layout is unchanged. */
+.desktop-intro{display:none}
+@media(min-width:1101px){
+ html{background:#020918}
+ .shell{min-height:100vh}
+ .aside{width:232px;position:sticky;top:0;height:100vh;padding:31px 16px;box-shadow:7px 0 45px #0003}
+ .brand{margin-bottom:58px}
+ .nav{font-size:14px;margin-bottom:12px;padding:17px 15px}
+ .nav .ico{font-size:21px}
+ .main{padding:29px clamp(24px,3.2vw,62px) 46px;max-width:1920px;margin-left:auto;margin-right:auto}
+ .header{min-height:58px;padding-bottom:5px}
+ .headline h1{font-size:30px}
+ .headline p{font-size:12px;margin-top:8px}
+ .globalbar{gap:12px}
+ .search{width:clamp(235px,22vw,355px);padding:13px 16px;font-size:12px}
+ .avatar{width:39px;height:39px}
+ .overline{margin:20px 0 19px;font-size:11px}
+ .desktop-intro{display:grid;grid-template-columns:minmax(250px,1fr) minmax(450px,1.35fr);gap:15px;align-items:center;border:1px solid #2b6b9e;background:radial-gradient(ellipse at 78% 24%,#0c5a9a52,transparent 60%),linear-gradient(105deg,#081f3f,#082a55 58%,#061c37);padding:19px 23px;margin-bottom:17px;border-radius:13px;position:relative;overflow:hidden;min-height:109px}
+ .desktop-intro:after{content:"";pointer-events:none;position:absolute;inset:0;background:linear-gradient(110deg,transparent 42%,#46d9ff09 47%,transparent 54%);animation:deskSweep 8s linear infinite}
+ .desk-kicker{font-size:10px;font-weight:800;color:#58d9fa;letter-spacing:2px;display:block;margin-bottom:6px}
+ .desktop-intro h2{font-size:20px;line-height:1.55;margin:0 0 7px;font-weight:800;letter-spacing:.5px}
+ .desktop-intro p{margin:0;font-size:11px;color:#97b8d6}
+ .desk-track{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;align-items:stretch}
+ .desk-node{position:relative;text-align:center;padding:13px 6px;background:#0a315d;border:1px solid #3374a5;border-radius:9px;box-shadow:inset 0 0 16px #0b70c13b}
+ .desk-node:not(:last-child):after{content:"›";position:absolute;top:28px;right:-13px;color:#3de0ff;font-size:22px;z-index:2;text-shadow:0 0 8px #18ceff}
+ .desk-node b{display:block;font-size:11px;letter-spacing:.5px;color:#e5f6ff}
+ .desk-node small{font-size:9px;display:block;color:#8eb7db;margin-top:6px}
+ .desk-node .node-ico{display:block;font-size:20px;color:#50dfff;margin-bottom:5px;text-shadow:0 0 12px #26b9ff}
+ .stats{gap:16px;margin-bottom:17px}
+ .stat{padding:21px 21px;min-height:143px}
+ .stat-label{font-size:12px}
+ .stat-num{font-size:34px;margin-top:10px}
+ .stat-sub{font-size:11px}
+ .cols{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px;margin-bottom:16px}
+ .cols.equal{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .card{padding:21px 23px}
+ .cardhead{margin-bottom:17px}
+ .cardhead h2{font-size:16px}
+ .cardhead p{font-size:11px}
+ .askline{margin-top:19px;margin-bottom:14px}
+ .askline input{padding:14px 15px;font-size:13px}
+ .answer{padding:17px 18px;min-height:135px}
+ .answer p{font-size:13px}
+ .steps{gap:9px}
+ .step{padding:16px 6px}
+ .step strong{font-size:11px}
+ .chartline{margin-top:23px;padding-top:19px}
+ .item-title strong{font-size:12px}
+ .item-title small{font-size:11px}
+ .notice{padding:15px 1px}
+ #workflow .cols{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)}
+ #workflow .flowstep{padding:15px 0}
+ #knowledge .table th{font-size:11px}
+ #knowledge .table td{padding:17px 12px;font-size:12px}
+ #knowledge .card:first-of-type{padding-top:24px}
+ .desktop-fullscreen{display:inline-flex}
+}
+@media(min-width:761px) and (max-width:1100px){.desktop-intro{display:none}.desktop-fullscreen{display:none}}
+@media(max-width:760px){.desktop-intro,.desktop-fullscreen{display:none!important}}
+@media(min-width:1700px){.main{padding-left:56px;padding-right:56px}.desktop-intro{min-height:130px}.desk-node{padding:17px 9px}.stat{min-height:157px}}
+@media(prefers-reduced-motion:reduce){.desktop-intro:after{animation:none}}
+@keyframes deskSweep{from{transform:translateX(-70%)}to{transform:translateX(120%)}}
+
+/* Light theme inspired by the user's blue-white dashboard reference. */
+:root{color-scheme:light;--bg:#f3f7fd;--card:#fff;--line:#dce7f5;--cyan:#1686f8;--txt:#13264b;--muted:#687f9f;--mint:#25b99c;--amber:#f5a24f;--purple:#8c7cf2}
+body{background:#f1f6fd!important;color:#172b4d!important}
+.shell{background:radial-gradient(ellipse at 85% -5%,#d8ebffb8,transparent 42%),radial-gradient(ellipse at 0% 100%,#e1edff,transparent 38%),#f2f7fd!important}
+.aside{background:linear-gradient(180deg,#152a49,#142d50 70%,#10213c)!important;border-right:1px solid #1d3558!important;box-shadow:5px 0 28px #1e3b5a10}
+.aside:after{border-color:#315783!important;box-shadow:0 0 48px #3974b522!important}
+.brand small{color:#adc5e3!important;letter-spacing:.1px!important;line-height:1.6}
+.navtitle{color:#8ba8cc!important}
+.nav{color:#d1deef!important}
+.nav .ico{color:#a9c9ef!important}
+.nav:hover{background:#23436b!important}
+.nav.active{background:linear-gradient(95deg,#3264a7,#294c7f)!important;border-color:#4d87ce!important;box-shadow:0 4px 15px #061f3c33!important;color:#fff!important}
+.nav.active .ico{color:#fff!important}
+.sidenote{color:#a8c1df!important}
+.sidenote strong{color:#a9e9ff!important}
+.sidenote hr{background:#69c9ff!important;box-shadow:0 0 8px #69c9ff66!important}
+.main{background:transparent!important}
+.main:before{background:repeating-radial-gradient(ellipse at 100% -30%,transparent 0 20px,#3387df0b 21px 22px,transparent 23px 44px)!important}
+.headline h1{color:#14284b!important}
+.headline h1:before{background:linear-gradient(#5cb6ff,#1678ee)!important;box-shadow:0 0 10px #1686f83a!important}
+.headline p{color:#687f9f!important}
+.search{background:#fff!important;border:1px solid #d6e2f1!important;color:#203a60!important;box-shadow:0 2px 6px #1b4b7a06}
+.search::placeholder,input::placeholder{color:#8da0ba!important}
+.btn{background:#fff!important;color:#315577!important;border-color:#d2e0f1!important;box-shadow:0 2px 5px #214d7608!important}
+.btn:hover{border-color:#8dbcf4!important;background:#f3f8ff!important}
+.btn.primary{background:linear-gradient(115deg,#278cf5,#1267d7)!important;border-color:#2182e8!important;color:#fff!important;box-shadow:0 5px 14px #1e7ee52a!important}
+.avatar{border-color:#b5d8ff!important;box-shadow:0 2px 10px #167dec25!important}
+.overline{color:#7085a1!important}
+.test-mark{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;padding:7px 12px;border-radius:8px;border:1px solid #b8d7fb;background:linear-gradient(110deg,#fff,#e9f4ff);color:#174d91;box-shadow:0 3px 10px #317fce12;font-size:11px}
+.test-mark b{font-size:12px;color:#1253a0;letter-spacing:1px}
+.test-mark small{font-size:10px;color:#6684a9;border-left:1px solid #c5dbf5;padding-left:7px}
+.test-dot{width:7px;height:7px;border-radius:50%;background:#1987f7;box-shadow:0 0 0 3px #1686f81c}
+.desktop-intro{background:radial-gradient(ellipse at 78% 24%,#d9ecff,transparent 60%),linear-gradient(105deg,#fff,#edf6ff 58%,#e6f2ff)!important;border-color:#d7e6f8!important;box-shadow:0 4px 15px #35628e0b!important}
+.desktop-intro:after{background:linear-gradient(110deg,transparent 42%,#2388f709 47%,transparent 54%)!important}
+.desktop-intro h2{color:#172b4d!important}
+.desktop-intro p{color:#6d82a0!important}
+.desk-kicker{color:#1675d5!important}
+.desk-node{background:linear-gradient(180deg,#fff,#f1f7ff)!important;border-color:#d4e4f8!important;box-shadow:inset 0 1px #fff,0 3px 9px #21568a08!important}
+.desk-node b{color:#203a60!important}
+.desk-node small{color:#7489a5!important}
+.desk-node .node-ico{color:#2386f4!important;text-shadow:none!important}
+.desk-node:not(:last-child):after{color:#2386f4!important;text-shadow:none!important}
+.stat{background:linear-gradient(145deg,#fff,#fdfefe 78%)!important;border-color:#e2ebf6!important;box-shadow:0 5px 18px #294b6b0a,inset 0 1px #fff!important}
+.stat:after{background:linear-gradient(90deg,transparent,#5ca8ff,transparent)!important;box-shadow:0 0 8px #248aff20!important}
+.stat-label{color:#253e62!important}
+.stat-icon{background:#e4f1ff!important;color:#1979e7!important;border-color:#d1e5ff!important;box-shadow:none!important}
+.stat-icon.teal{background:#ddf8f1!important;color:#13a889!important;border-color:#c5f0e6!important}
+.stat-icon.gold{background:#fff0df!important;color:#ef8d31!important;border-color:#ffe1c0!important}
+.stat-icon.purple{background:#eee9ff!important;color:#7a61e9!important;border-color:#dfd6ff!important}
+.stat-num{color:#102449!important}
+.stat-sub{color:#7488a4!important}
+.stat-sub b{color:#15a979!important}
+.spark span{background:linear-gradient(#8fc6ff,#3789f2)!important}
+.spark.gold span{background:linear-gradient(#ffd29d,#f5a251)!important}
+.spark.teal span{background:linear-gradient(#9debdc,#31bda7)!important}
+.spark.purple span{background:linear-gradient(#c7bbff,#8974f2)!important}
+.card{background:linear-gradient(145deg,#fff,#fdfefe)!important;border-color:#e0e9f5!important;box-shadow:0 5px 18px #294b6b0a,inset 0 1px #fff!important}
+.card:before{background:#2687f4!important;box-shadow:0 0 9px #1686f82a!important}
+.cardhead h2{color:#162b4e!important}
+.cardhead h2 span{color:#1b83ee!important;text-shadow:none!important}
+.cardhead p{color:#778ba6!important}
+.card.qa{background:radial-gradient(ellipse at 92% 0%,#e5f2ff,transparent 45%),linear-gradient(145deg,#fff,#f8fbff)!important}
+.tag.good{background:#def8ee!important;color:#16896d!important}
+.tag.warn{background:#fff0db!important;color:#bc6a0d!important}
+.tag.old{background:#ffebef!important;color:#c64e68!important}
+.tag.blue{background:#e4f1ff!important;color:#1a6fc5!important}
+.askline input{background:#fff!important;color:#1a3155!important;border-color:#d6e5f6!important;box-shadow:inset 0 1px 2px #234c7307}
+.chip{border-color:#d5e5f7!important;background:#f0f7ff!important;color:#436488!important}
+.chip:hover{border-color:#80b9fa!important;background:#e7f3ff!important}
+.answer{background:#f5f9ff!important;border-color:#d9e8f9!important}
+.answer .lead{color:#168c71!important}
+.answer p{color:#304968!important}
+.sources{border-top-color:#e2ebf6!important}
+.source{border-color:#cfe2fa!important;background:#eaf4ff!important;color:#2168ad!important}
+.source:hover{color:#104b8c!important;border-color:#7cb5f6!important}
+.step{background:#f1f7ff!important;border-color:#dce9f8!important}
+.step i{color:#2587f2!important}
+.step strong{color:#294767!important}
+.desc{color:#6d819d!important}
+.desc b{color:#203b60!important}
+.chartline{border-top-color:#e3ebf5!important}
+.ring{box-shadow:0 0 22px #0b7bdb12!important}
+.ring div{background:#fff!important;color:#183257!important;box-shadow:inset 0 0 0 1px #edf2fa}
+.ring small{color:#778ba5!important}
+.legrow{color:#607894!important}
+.legrow b{color:#1c3559!important}
+.item{border-bottom-color:#e8eef6!important}
+.item-icon{background:#e8f3ff!important;color:#1b7ee8!important}
+.item-title strong{color:#243d60!important}
+.item-title small{color:#8193ab!important}
+.action-link{color:#197de5!important}
+.action-link:hover{color:#095fbd!important}
+.notice{border-bottom-color:#e7eef7!important}
+.notice .content strong{color:#294362!important}
+.notice .content small{color:#7b8fa9!important}
+.notice button{background:#edf6ff!important;border-color:#cfe2fa!important;color:#1974d4!important}
+.muted{color:#8294ab!important}
+.tip{border-color:#d8e7f7!important;background:#f1f7ff!important;color:#5c7391!important}
+.tip strong{color:#203c60!important}
+.table th{background:#f1f6fc!important;color:#6d809a!important}
+.table td{border-bottom-color:#e6edf6!important;color:#516984!important}
+.table .name{color:#213a5e!important}
+.table tbody tr:hover{background:#f0f7ff!important}
+.filter{border-color:#dbe7f5!important;background:#fff!important;color:#6a809d!important}
+.filter.active{border-color:#7bb8fb!important;background:#e8f3ff!important;color:#145eae!important}
+.footrow{color:#8194ab!important}
+.banner{border-color:#d6e6f8!important;background:linear-gradient(100deg,#fff,#edf6ff)!important;box-shadow:0 4px 14px #214c7a09}
+.banner strong{color:#1b3559!important}
+.banner p{color:#7085a1!important}
+.flowtab{border-color:#d6e5f6!important;background:#fff!important;color:#5e7694!important}
+.flowtab.active{border-color:#82baf8!important;background:#e7f3ff!important;color:#125bad!important;box-shadow:0 3px 10px #1686f81c!important}
+.flowstep{border-bottom-color:#e4edf7!important}
+.flowstep strong{color:#2b4465!important}
+.flowstep p{color:#6f85a1!important}
+.num{border-color:#cde3fc!important;background:#e4f2ff!important;color:#1979dc!important}
+.mistake{border-left-color:#f1a34f!important;background:#fff6e9!important;color:#89633b!important}
+.drawer{background:linear-gradient(#fff,#f5f9ff)!important;border-left-color:#d7e6f8!important;box-shadow:-15px 0 45px #122a451c!important;color:#1b3355!important}
+.drawerClose{background:#eef5fd!important;color:#315779!important;border-color:#d5e3f2!important}
+.drawer h2,.drawer h3{color:#17335b!important}
+.drawer p{color:#5c7290!important}
+.field{background:#fff!important;border-color:#dce8f5!important}
+.field small{color:#7186a2!important}
+.field b{color:#233e61!important}
+.toast{background:#edf7ff!important;border-color:#9cccf9!important;color:#174d85!important;box-shadow:0 0 20px #0ab2d91c!important}
+.hintcaption{color:#8294ab!important}
+@media(max-width:760px){.test-mark{padding:6px 9px;gap:6px}.test-mark b{font-size:11px}.test-mark small{font-size:9px}.overline{flex-wrap:wrap;gap:8px}.date{margin-left:auto}.main{background:transparent!important}}
+
+</style></head><body><div class="shell">
+<aside class="aside"><div class="brand"><div class="logo">▣</div><div><strong>工作知识库</strong><small>沉淀 · 复用 · 协作 · 让工作更高效</small></div></div><div class="navtitle">核心工作空间</div>
+<nav aria-label="三大模块"><button class="nav active" data-page="overview"><span class="ico">⌂</span> 总览</button><button class="nav" data-page="knowledge"><span class="ico">▤</span> 工作知识库</button><button class="nav" data-page="workflow"><span class="ico">⤨</span> 工作流程</button></nav>
+<div class="sidenote"><strong>◈ ONE KNOWLEDGE BASE</strong>一个知识底座<br>一套有效版本<br>一条经验传承链<hr><div>纯静态交互演示 · 非正式系统</div></div></aside>
+<main class="main"><header class="header"><div class="headline"><h1 id="pageTitle">知识库总览</h1><p id="pageDesc">统一入口 · 可信知识 · 让经验不随人离开</p></div><div class="globalbar"><input id="search" class="search" placeholder="⌕ 搜索制度、项目、经验、流程…" aria-label="搜索演示知识"><button class="btn" id="jumpAI">✧ 智能问答</button><button class="btn desktop-fullscreen" id="screenMode" aria-label="切换电脑大屏模式">⛶ 大屏模式</button><div class="avatar"></div></div></header>
+<div class="overline"><span class="live"></span>统一知识底座　/　归档、状态、检索统一治理 <span class="date">演示数据截至：2026.10.19</span><span class="test-mark"><span class="test-dot"></span><b>蓝熙测试</b><small>测试环境</small></span></div>
+<section class="page active" id="overview">
+<div class="desktop-intro" aria-label="桌面知识沉淀链路">
+ <div><span class="desk-kicker">蓝熙测试 · LIGHT THEME PREVIEW</span><h2>资料能查到 · 版本能确认 · 经验能传承</h2><p>不是新的 OA / ERP，而是一个让知识长期有效的统一底座。</p></div>
+ <div class="desk-track">
+  <div class="desk-node"><span class="node-ico">⇧</span><b>统一入库</b><small>多来源资料</small></div>
+  <div class="desk-node"><span class="node-ico">✧</span><b>AI 辅助归档</b><small>分类与建台账</small></div>
+  <div class="desk-node"><span class="node-ico">✓</span><b>有效版本</b><small>责任人复核</small></div>
+  <div class="desk-node"><span class="node-ico">⌕</span><b>随问随查</b><small>原文可追溯</small></div>
+ </div>
+</div>
+<div class="stats"><div class="stat"><div class="stat-label"><span class="stat-icon">▤</span> 知识条目</div><div class="stat-num">1,284</div><div class="stat-sub">统一沉淀 <b>↑ 12%</b></div><div class="spark"><span style="--h:8px"></span><span style="--h:14px"></span><span style="--h:19px"></span><span style="--h:24px"></span></div></div>
+<div class="stat"><div class="stat-label"><span class="stat-icon teal">✓</span> 现行有效</div><div class="stat-num">1,136</div><div class="stat-sub">有效率 <b>88.5%</b></div><div class="spark teal"><span style="--h:9px"></span><span style="--h:14px"></span><span style="--h:20px"></span><span style="--h:25px"></span></div></div>
+<div class="stat"><div class="stat-label"><span class="stat-icon gold">!</span> 待复核知识</div><div class="stat-num">21</div><div class="stat-sub">需责任人处理</div><div class="spark gold"><span style="--h:24px"></span><span style="--h:18px"></span><span style="--h:12px"></span><span style="--h:7px"></span></div></div>
+<div class="stat"><div class="stat-label"><span class="stat-icon purple">✧</span> 经验案例</div><div class="stat-num">218</div><div class="stat-sub">可复用经验 <b>↑ 16%</b></div><div class="spark purple"><span style="--h:7px"></span><span style="--h:12px"></span><span style="--h:19px"></span><span style="--h:25px"></span></div></div></div>
+<div class="cols">
+<div class="card qa"><div class="cardhead"><div><h2><span>✧</span> AI 可信知识问答 <span class="tag good">有效版本优先</span></h2><p>自然语言提问 · 校验版本与权限 · 回答有出处</p></div><span class="tag blue">交互模拟</span></div>
+<div class="askline"><input id="askInput" aria-label="知识问答" value="现在有效的项目交接管理办法是哪一版？"><button class="btn primary" id="askButton">提问 ↗</button></div><div class="chips"><button class="chip" data-question="现在有效的项目交接管理办法是哪一版？">最新制度是哪版？</button><button class="chip" data-question="新人接手项目应该做什么？">新人如何交接？</button><button class="chip" data-question="以前项目需求变更踩过什么坑？">查看历史经验</button></div>
+<div class="answer" id="answer"><div class="lead">✓ 演示回答 · 过滤失效版本</div><p>当前示例台账中有效版本为 <b>《项目交接管理办法（2026版）》V3.2</b>。旧版 V2.4 已标记为“废止”，不作为现行依据。</p><div class="sources"><button class="source" data-doc="1">▤ 原文依据 · V3.2 ↗</button><span class="tag good">现行有效</span><span class="muted">依据可追溯</span></div></div>
+</div>
+<div class="card"><div class="cardhead"><div><h2><span>⌘</span> 智能归档与治理</h2><p>资料入库即分类、归档、建台账</p></div></div><div class="steps"><div class="step"><i>⇧</i><strong>文件导入</strong></div><div class="step"><i>✧</i><strong>AI 分类</strong></div><div class="step"><i>▦</i><strong>版本台账</strong></div><div class="step"><i>✓</i><strong>人工复核</strong></div></div><p class="desc">统一知识底座；文件关联 <b style="color:white">版本、状态、归口、责任人</b>。未核验的信息不会直接成为可信答案。</p>
+<button class="btn primary" id="importButton">✦ 体验模拟 AI 归档</button><button class="btn" data-page="knowledge" style="margin-left:6px">查看台账 ↗</button><div class="chartline"><div class="ring"><div>88.5%<small>现行有效</small></div></div><div class="leg"><div class="legrow"><span class="dot" style="background:#299bff"></span>有效可引用<b>1,136</b></div><div class="legrow"><span class="dot" style="background:#ffc277"></span>待复核<b>96</b></div><div class="legrow"><span class="dot" style="background:#aa8aff"></span>废止留档<b>52</b></div></div></div></div>
+</div>
+<div class="cols equal"><div class="card"><div class="cardhead"><h2><span>◷</span> 知识维护提醒</h2><button class="action-link" data-review="1">查看待复核 →</button></div>
+<div class="notice"><span class="dot" style="background:#ffb65d"></span><div class="content"><strong>岗位交接检查表待复核</strong><small>人力资源部 · 林悦 / 10月18日到期</small></div><button data-doc="4">查看</button></div>
+<div class="notice"><span class="dot" style="background:#f080a5"></span><div class="content"><strong>项目交接管理办法旧版已废止</strong><small>保留历史引用，不用于现行依据</small></div><button data-doc="5">查看</button></div>
+<div class="notice"><span class="dot" style="background:#3fe6c7"></span><div class="content"><strong>制度更新与版本管理 SOP</strong><small>综合管理部 / 更新于 10月18日</small></div><button data-doc="9">查看</button></div>
+</div><div class="card"><div class="cardhead"><h2><span>✦</span> 高价值知识 · 少踩重复的坑</h2><button class="action-link" data-page="knowledge">查看全部 →</button></div>
+<div class="item"><div class="item-icon">!</div><div class="item-title"><strong>需求频繁变更：先确认边界再执行</strong><small>复盘经验 · 记录原因和预防措施</small></div><button class="action-link" data-doc="3">查看 ↗</button></div>
+<div class="item"><div class="item-icon">✓</div><div class="item-title"><strong>项目交接不能只交文件</strong><small>待办、关键联系人、风险同步交接</small></div><button class="action-link" data-page="workflow">SOP ↗</button></div>
+<div class="item"><div class="item-icon">?</div><div class="item-title"><strong>新人不知道去哪找工作资料</strong><small>岗位手册集中索引，按步骤上手</small></div><button class="action-link" data-doc="6">查看 ↗</button></div></div></div>
+</section>
+<section class="page" id="knowledge">
+<div class="stats"><div class="stat"><div class="stat-label"><span class="stat-icon">▤</span> 统一知识底座</div><div class="stat-num">1 个</div><div class="stat-sub">统一检索与权限入口</div></div><div class="stat"><div class="stat-label"><span class="stat-icon teal">✧</span> AI 辅助归档</div><div class="stat-num">已规划</div><div class="stat-sub">识别、分类、元数据</div></div><div class="stat"><div class="stat-label"><span class="stat-icon gold">▦</span> 版本状态</div><div class="stat-num">3 类</div><div class="stat-sub">有效 / 待复核 / 废止</div></div><div class="stat"><div class="stat-label"><span class="stat-icon purple">⌕</span> 全域搜索</div><div class="stat-num">统一</div><div class="stat-sub">制度、案例、流程、模板</div></div></div>
+<div class="card" style="margin-bottom:13px"><div class="cardhead"><div><h2><span>▦</span> 知识档案 · 元数据台账</h2><p>分类、版本、生效状态与责任到人 · 点击资料行查看溯源详情</p></div><button class="btn primary" id="importButton2">＋ 模拟智能归档</button></div><div class="filters" id="filters"></div><div class="tableWrap"><table class="table"><thead><tr><th>知识文件名称</th><th>分类</th><th>版本</th><th>引用状态</th><th>归口 / 责任人</th><th>更新日期</th></tr></thead><tbody id="docRows"></tbody></table></div><div class="footrow"><span id="docCount">当前显示示例资料</span><button class="action-link" id="resetFilter">重置筛选 ↺</button></div></div>
+<div class="cols equal"><div class="card"><div class="cardhead"><h2><span>✧</span> AI 智能归档规则</h2></div><div class="item"><div class="item-icon">01</div><div class="item-title"><strong>识别文档类型与主题</strong><small>制度、项目、复盘、手册、操作流程等</small></div></div><div class="item"><div class="item-icon">02</div><div class="item-title"><strong>提取并建立元数据台账</strong><small>版本、责任人、生效日期、引用状态</small></div></div><div class="item"><div class="item-icon">03</div><div class="item-title"><strong>人工确认后纳入有效引用</strong><small>自动分类是建议，有效性须经责任人确认</small></div></div></div>
+<div class="card"><div class="cardhead"><h2><span>◈</span> 知识治理原则</h2></div><div class="tip"><strong>一个底座，分层不分家</strong><br>按照内容类型组织目录，避免按部门重复创建孤立知识库。</div><div class="tip" style="margin-top:10px"><strong>只有一个当前有效版本</strong><br>旧版可追溯，但不能混入现行制度答案。</div><div class="tip" style="margin-top:10px"><strong>有人维护，有人负责</strong><br>落实责任人及复核节奏，避免知识过期失效。</div></div></div>
+</section>
+<section class="page" id="workflow">
+<div class="banner"><strong>⤨ 工作流程 = 怎么做的知识资产，不是审批系统</strong><p>沉淀标准操作、历史教训、资料模板和岗位交接清单，让工作不因人员变动而断档。</p></div>
+<div class="stats"><div class="stat"><div class="stat-label"><span class="stat-icon">▤</span> 标准操作手册</div><div class="stat-num">42</div><div class="stat-sub">统一操作口径</div></div><div class="stat"><div class="stat-label"><span class="stat-icon teal">✓</span> 岗位交接指引</div><div class="stat-num">18</div><div class="stat-sub">岗位传承不断档</div></div><div class="stat"><div class="stat-label"><span class="stat-icon gold">!</span> 常见错误提示</div><div class="stat-num">63</div><div class="stat-sub">避免重复踩坑</div></div><div class="stat"><div class="stat-label"><span class="stat-icon purple">◇</span> 关联工具模板</div><div class="stat-num">56</div><div class="stat-sub">让经验立即可执行</div></div></div>
+<div class="card" style="margin-bottom:13px"><div class="cardhead"><div><h2><span>⌘</span> 选择一个工作场景</h2><p>一个 SOP = 标准步骤 + 注意事项 + 关联资料</p></div></div><div class="flowtabs" id="flowTabs"></div></div>
+<div class="cols"><div class="card"><div class="cardhead"><div><h2><span>≡</span> <span id="flowTitle"></span></h2><p id="flowSub"></p></div><span class="tag good">可复用操作指南</span></div><div id="flowSteps"></div></div><div><div class="card" style="margin-bottom:13px"><div class="cardhead"><h2><span style="color:#ffb66b">!</span> 以前踩过的坑</h2></div><div id="flowMistakes"></div><p class="hintcaption">问题经验与操作步骤关联，方便持续补充。</p></div><div class="card"><div class="cardhead"><h2><span>▤</span> 关联资料与模板</h2></div><div id="flowDocs"></div><div class="tip" style="margin-top:10px"><strong>目标：换个人也能继续做</strong><br>明确做到哪一步、下一步做什么、哪里容易出错。</div></div></div></div>
+</section></main></div>
+<div class="modal" id="modal"><div class="drawer" role="dialog" aria-modal="true" aria-label="资料详情"><button class="drawerClose" id="closeModal">✕ 关闭</button><div id="modalBody"></div></div></div><div class="toast" id="toast" role="status"></div>
+<script>
+(function(){
+const docs=[
+{id:1,name:"项目交接管理办法（2026版）",cat:"制度规章",v:"V3.2",state:"现行有效",owner:"项目管理部 · 周岚",date:"2026-10-16",effective:"2026-10-16",detail:"交接范围包括项目进度、关键联系人、文档现行版本、未完成事项和遗留风险，交接人及接手人逐项确认。"},
+{id:2,name:"合同资料归档规范",cat:"制度规章",v:"V2.1",state:"现行有效",owner:"综合管理部 · 陈敏",date:"2026-10-12",effective:"2026-10-12",detail:"规范合同材料的命名方式、归档目录、必备附件及归口责任。"},
+{id:3,name:"项目复盘：需求频繁变更的教训",cat:"经验案例",v:"V1.0",state:"现行有效",owner:"项目管理部 · 王强",date:"2026-10-13",effective:"2026-10-13",detail:"场景：反复口头变更导致返工；经验：明确边界、书面记录、责任人确认，重要变更同步相关成员。"},
+{id:4,name:"岗位交接检查表",cat:"模板工具",v:"V2.0",state:"待复核",owner:"人力资源部 · 林悦",date:"2026-09-26",effective:"待确认",detail:"用于记录离岗、转岗资料与工作交接。最新模板尚需责任人复核，暂不作为经核验的有效文件。"},
+{id:5,name:"项目交接管理办法（旧版）",cat:"制度规章",v:"V2.4",state:"已废止",owner:"项目管理部 · 周岚",date:"2025-12-20",effective:"已失效",detail:"已被V3.2取代。保留历史记录，不可用于现行引用。"},
+{id:6,name:"新员工接手指南",cat:"岗位手册",v:"V1.2",state:"现行有效",owner:"人力资源部 · 林悦",date:"2026-10-17",effective:"2026-10-17",detail:"包括岗位职责、统一知识库入口、常用制度、项目列表、关键联系人、操作方法和首周检查清单。"},
+{id:7,name:"客户需求澄清常见问答",cat:"经验案例",v:"V1.0",state:"现行有效",owner:"业务运营部 · 李娜",date:"2026-10-15",effective:"2026-10-15",detail:"需求歧义澄清办法、确认话术、易遗漏条件及典型问题案例。"},
+{id:8,name:"会议纪要归档模板",cat:"模板工具",v:"V1.3",state:"现行有效",owner:"综合管理部 · 陈敏",date:"2026-10-10",effective:"2026-10-10",detail:"包含会议主题、结论、需留存的经验和归档位置，作为知识沉淀工具，不替代OA督办。"},
+{id:9,name:"制度更新与版本管理 SOP",cat:"工作流程",v:"V1.1",state:"现行有效",owner:"综合管理部 · 陈敏",date:"2026-10-18",effective:"2026-10-18",detail:"通过提出变更、内容审核、台账更新、废止旧版本及更新引用索引完成版本维护。"},
+{id:10,name:"项目启动资料包说明",cat:"项目档案",v:"V1.0",state:"现行有效",owner:"项目管理部 · 王强",date:"2026-10-15",effective:"2026-10-15",detail:"项目启动前应整理目标、需求、关键决策、联系人、风险和资料目录。"}
+];
+const flows=[
+{name:"项目交接 SOP",sub:"离岗、转岗、接手：交什么、怎么交",steps:[["明确交接范围","列出负责事项、当前进度、关键联系人和资料位置。"],["整理有效版本","按标准目录移交现行文件、工作台账及未办事项。"],["说明历史与风险","交待决策背景、常见问题、特殊约定和处理经验。"],["由接手人核对","逐项核验缺失材料，形成可追踪的交接记录。"],["持续补充经验","把新发现的问题和方法回写知识库。"]],mistakes:["只交文件不交背景，接手人不知道下一步怎么办。","关键资料只在个人电脑里，离岗后找不到。","交接清单版本过期，导致工作遗漏。"],docs:[1,4,6]},
+{name:"项目启动 SOP",sub:"从历史经验出发，更可靠地启动项目",steps:[["了解项目背景","确认目标、关键限制、参与人员及已有结论。"],["查阅类似项目","先搜索历史复盘，避免重复出错。"],["准备项目资料包","使用统一模板整理合同、方案与关键依据。"],["明确变更记录方式","约定如何确认需求、记录和追溯重要变化。"],["阶段性归档","同步沉淀过程信息、关键决策及工作经验。"]],mistakes:["没有查过往案例，同样问题重复出现。","关键要求只靠口头传达，后续容易产生歧义。"],docs:[10,3,1]},
+{name:"问题复盘 SOP",sub:"让每次问题的解决过程都变成知识",steps:[["还原问题场景","记录背景、现象和影响范围。"],["分析根因","区分直接原因与制度、沟通或工具问题。"],["描述处理步骤","记录真实解决路径及有效条件。"],["归纳防错规则","形成清晰、可执行的注意事项。"],["关联工作指引","把经验链接到岗位、项目或操作手册。"]],mistakes:["只写解决结果，不写原因与条件。","经验散在聊天中，没有形成可检索的资料。"],docs:[3,7,9]},
+{name:"制度版本更新 SOP",sub:"一套制度，始终能确定哪个版本可用",steps:[["提出修订","说明变更原因和拟替代的版本。"],["责任人复核","确认内容、生效时间及责任归属。"],["更新元数据台账","写入最新版本、状态、部门和责任人。"],["标记旧版失效","保留历史但排除现行答案引用。"],["更新问答索引","确保系统优先使用有效、已授权的材料。"]],mistakes:["两个版本同时标有效，员工无从判断。","文件状态更新了，问答索引却仍引用旧版。"],docs:[9,1,5]}
+];
+let cat="全部",onlyReview=false,query="",flowIndex=0,imported=false,active="overview";
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function tag(s){return '<span class="tag '+(s==="现行有效"?"good":s==="待复核"?"warn":"old")+'">'+s+'</span>'}
+function page(name){active=name;const m={overview:["知识库总览","统一入口 · 可信知识 · 让经验不随人离开"],knowledge:["工作知识库","AI 辅助归档 · 文件状态清晰 · 经验随时复用"],workflow:["工作流程","标准操作 · 经验避坑 · 岗位交接不断档"]};$$(".page").forEach(x=>x.classList.toggle("active",x.id===name));$$(".nav").forEach(x=>x.classList.toggle("active",x.dataset.page===name));$("#pageTitle").textContent=m[name][0];$("#pageDesc").textContent=m[name][1];if(name==="knowledge")renderDocs();if(name==="workflow")renderFlow();}
+function renderDocs(){let types=["全部","制度规章","项目档案","经验案例","岗位手册","模板工具","工作流程"];$("#filters").innerHTML=types.map(t=>'<button class="filter '+(cat===t?"active":"")+'" data-cat="'+t+'">'+(t==="全部"?"全部资料":t)+'</button>').join("")+'<button class="filter '+(onlyReview?"active":"")+'" data-review="1">待复核</button>';let d=docs.filter(x=>(cat==="全部"||cat===x.cat)&&(!onlyReview||x.state==="待复核"));let q=query.toLowerCase().trim();if(q)d=d.filter(x=>[x.name,x.cat,x.owner,x.detail,x.v].some(y=>y.toLowerCase().includes(q)));$("#docRows").innerHTML=d.length?d.map(x=>'<tr data-doc="'+x.id+'"><td class="name">▤ '+esc(x.name)+'</td><td>'+esc(x.cat)+'</td><td>'+esc(x.v)+'</td><td>'+tag(x.state)+'</td><td>'+esc(x.owner)+'</td><td>'+esc(x.date)+'</td></tr>').join(""):'<tr><td colspan="6" style="padding:27px;text-align:center;color:#88a8ca">没有符合条件的演示文档，请尝试更改筛选。</td></tr>';$("#docCount").textContent="当前显示 "+d.length+" 条演示资料";}
+function showDoc(id){let d=docs.find(x=>x.id===Number(id));if(!d)return;let fields=[["类别",d.cat],["版本",d.v],["引用状态",d.state],["归口责任人",d.owner],["更新时间",d.date],["生效日期",d.effective],["元数据关联","统一知识库"],["原文状态","演示记录"]];$("#modalBody").innerHTML=tag(d.state)+'<h2>'+esc(d.name)+'</h2><p>知识台账中登记的元数据：</p><div class="fields">'+fields.map(f=>'<div class="field"><small>'+esc(f[0])+'</small><b>'+esc(f[1])+'</b></div>').join("")+'</div><h3>内容摘要</h3><p>'+esc(d.detail)+'</p><div class="tip"><strong>使用规则：</strong><br>'+(d.state==="现行有效"?"示例状态允许引用。正式系统仍需验证用户权限、真实原文和有效状态。":d.state==="待复核"?"责任人尚未确认有效性，不应作为正式依据。":"只保留历史溯源，不用于现行问答。")+'</div><p style="font-size:11px">当前没有关联真实文件；原文链接将在正式接入企业存储后生效。</p>';$("#modal").classList.add("open");}
+function answer(type){let body={version:['✓ 示例台账检索 · 已排除废止版本','当前示例台账中有效版本为 <b>《项目交接管理办法（2026版）》V3.2</b>，由项目管理部维护，2026年10月16日生效。V2.4已废止，不作为现行依据。','<button class="source" data-doc="1">▤ 现行版本 V3.2 ↗</button><button class="source" data-doc="5">查看废止旧版 ↗</button>'],handover:['✓ 示例交接方法 · 按步骤执行','项目交接应完成五步：<b>明确范围 → 整理有效资料 → 交待背景与风险 → 接手人复核 → 持续更新知识</b>。特别注意遗留事项与关键联系人，不能只交文件。','<button class="source" data-doc="6">▤ 新员工接手指南 ↗</button><button class="source" data-page="workflow">查看完整操作指南 ↗</button>'],lesson:['✓ 示例历史经验 · 可追溯','历史复盘显示：需求多次口头变更会导致返工，建议<b>书面确认需求边界、记录每次变化、明确责任人</b>，再进入下一阶段。','<button class="source" data-doc="3">▤ 项目复盘来源 ↗</button><button class="source" data-doc="7">客户需求澄清问答 ↗</button>'],none:['演示范围提示','本页面尚未接入真实 AI 或知识数据库。可以尝试提问“最新制度是哪版”“新人如何交接”“历史需求变更有什么教训”。实际系统遇到无可靠来源的内容应明确说明无法确认。','']};let x=body[type];$("#answer").innerHTML='<div class="lead">'+x[0]+'</div><p>'+x[1]+'</p><div class="sources">'+x[2]+'</div>';}
+function ask(){let v=$("#askInput").value.trim();answer(/版本|制度|现行|有效|管理办法|过期/.test(v)?"version":/新人|交接|接手|岗位|入职/.test(v)?"handover":/复盘|需求|变更|踩坑|问题|经验|案例/.test(v)?"lesson":"none");}
+function renderFlow(){let f=flows[flowIndex];$("#flowTabs").innerHTML=flows.map((x,i)=>'<button class="flowtab '+(i===flowIndex?"active":"")+'" data-flow="'+i+'">'+esc(x.name)+'</button>').join("");$("#flowTitle").textContent=f.name;$("#flowSub").textContent=f.sub;$("#flowSteps").innerHTML=f.steps.map((s,i)=>'<div class="flowstep"><div class="num">'+String(i+1).padStart(2,"0")+'</div><div><strong>'+esc(s[0])+'</strong><p>'+esc(s[1])+'</p></div></div>').join("");$("#flowMistakes").innerHTML=f.mistakes.map(x=>'<div class="mistake">⚠ '+esc(x)+'</div>').join("");$("#flowDocs").innerHTML=f.docs.map(id=>{let d=docs.find(x=>x.id===id);return '<div class="item"><div class="item-icon">▤</div><div class="item-title"><strong>'+esc(d.name)+'</strong><small>'+esc(d.v)+' · '+esc(d.owner)+'</small></div><button class="action-link" data-doc="'+id+'">查看 ↗</button></div>'}).join("");}
+let timer;function toast(s){let t=$("#toast");t.textContent=s;t.classList.add("show");clearTimeout(timer);timer=setTimeout(()=>t.classList.remove("show"),4500);}
+function importDemo(){if(!imported){docs.unshift({id:11,name:"新导入：客户交接经验（模拟样例）",cat:"经验案例",v:"待核验",state:"待复核",owner:"待分配 · 知识管理员",date:"2026-10-19",effective:"待确认",detail:"这是模拟导入的示例条目。系统建议分类为经验案例、记录日期并生成台账候选。未调用真实AI，也没有上传真实文档。"});imported=true;toast("已生成模拟归档候选：状态为“待复核”，需人工确认后才可引用。")}else toast("模拟归档条目已存在，请在文档台账第一行查看。");cat="全部";onlyReview=false;query="";$("#search").value="";page("knowledge");}
+document.addEventListener("click",e=>{let b=e.target.closest("button,[data-doc]");if(!b)return;if(b.dataset.doc){showDoc(b.dataset.doc);return}if(b.dataset.page){page(b.dataset.page);return}if(b.dataset.question){$("#askInput").value=b.dataset.question;ask();return}if(b.dataset.cat){cat=b.dataset.cat;onlyReview=false;renderDocs();return}if(b.dataset.flow!==undefined){flowIndex=Number(b.dataset.flow);renderFlow();return}if(b.dataset.review){cat="全部";onlyReview=true;page("knowledge");return}});
+$("#screenMode").addEventListener("click",async()=>{try{if(document.fullscreenElement){await document.exitFullscreen()}else if(document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen()}else{toast("当前浏览器不支持网页全屏，可使用浏览器全屏快捷键。")}}catch(e){toast("浏览器未允许进入全屏，请使用全屏快捷键。")}});document.addEventListener("fullscreenchange",()=>{$("#screenMode").textContent=document.fullscreenElement?"⤡ 退出大屏":"⛶ 大屏模式"});$("#askButton").addEventListener("click",ask);$("#askInput").addEventListener("keydown",e=>{if(e.key==="Enter")ask()});$("#importButton").addEventListener("click",importDemo);$("#importButton2").addEventListener("click",importDemo);$("#jumpAI").addEventListener("click",()=>{page("overview");$("#askInput").focus()});$("#resetFilter").addEventListener("click",()=>{cat="全部";onlyReview=false;query="";$("#search").value="";renderDocs()});$("#search").addEventListener("keydown",e=>{if(e.key==="Enter"){query=e.target.value;cat="全部";onlyReview=false;page("knowledge")}});$("#closeModal").addEventListener("click",()=>$("#modal").classList.remove("open"));$("#modal").addEventListener("click",e=>{if(e.target===$("#modal"))$("#modal").classList.remove("open")});document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#modal").classList.remove("open")});renderDocs();renderFlow();
+})();
+</script>
+</body></html>
