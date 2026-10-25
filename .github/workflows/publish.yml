@@ -23,6 +23,7 @@ jobs:
         run: |
           mkdir -p site/dark
           cp index.html site/index.html
+          cp dark.html site/dark.html
           cp dark/index.html site/dark/index.html
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
