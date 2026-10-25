@@ -1,4 +1,4 @@
-name: Publish hand-drawn style gallery
+name: Publish knowledge base
 on:
   push:
     branches: [main]
@@ -17,48 +17,16 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Check out this repository for the knowledge base demo
+      - name: Check out site
         uses: actions/checkout@v6
-        with:
-          path: site-source
-      - name: Check out the original public repository
-        uses: actions/checkout@v6
-        with:
-          repository: yang0/handraw-style
-          ref: master
-          path: upstream
-      - name: Prepare the gallery site
+      - name: Prepare Pages files
         run: |
-          mkdir -p site/images site/skills/handdraw-style-prompter
-          cp -a upstream/images/. site/images/
-          cp -a upstream/skills/handdraw-style-prompter/gallery site/skills/handdraw-style-prompter/
-          cp upstream/LICENSE site/LICENSE
-          cat > site/index.html <<'HTML'
-          <!doctype html>
-          <html lang="zh-CN">
-          <head>
-            <meta charset="utf-8">
-            <meta http-equiv="refresh" content="0; url=skills/handdraw-style-prompter/gallery/index.html">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>手绘风格图鉴 · Hand-drawn Style Gallery</title>
-          </head>
-          <body>
-            <p>正在打开手绘风格图鉴…若页面没有自动跳转，请<a href="skills/handdraw-style-prompter/gallery/index.html">点击这里</a>。</p>
-            <p>原作者：yang0。源项目与许可：<a href="https://github.com/yang0/handraw-style">github.com/yang0/handraw-style</a></p>
-          </body>
-          </html>
-          HTML
-      - name: Include independent knowledge base demo
-        run: |
-          mkdir -p site/knowledge-base-demo
-          cp site-source/knowledge-base-demo/index.html site/knowledge-base-demo/index.html
-      - name: Include independent light theme knowledge base demo
-        run: |
-          mkdir -p site/knowledge-base-light-demo
-          cp site-source/knowledge-base-light-demo/index.html site/knowledge-base-light-demo/index.html
+          mkdir -p site/dark
+          cp index.html site/index.html
+          cp dark/index.html site/dark/index.html
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-      - name: Upload the site artifact
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           path: site
