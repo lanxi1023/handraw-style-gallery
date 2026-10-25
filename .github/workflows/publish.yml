@@ -1,4 +1,4 @@
-name: Publish knowledge base
+name: Publish personal website
 on:
   push:
     branches: [main]
@@ -23,6 +23,8 @@ jobs:
         run: |
           mkdir -p site/dark
           cp index.html site/index.html
+          cp knowledge.html site/knowledge.html
+          cp gallery.html site/gallery.html
           cp dark.html site/dark.html
           cp dark/index.html site/dark/index.html
       - name: Configure GitHub Pages
