@@ -26,6 +26,7 @@ jobs:
           cp knowledge.html site/knowledge.html
           cp gallery.html site/gallery.html
           cp costume.html site/costume.html
+          cp costume-online-test.html site/costume-online-test.html
           cp dark.html site/dark.html
           cp dark/index.html site/dark/index.html
           cp -R assets site/assets
