@@ -18,6 +18,7 @@ import httpx
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from starlette.background import BackgroundTask
+from bridge_identity import assertion
 
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / 'data'
@@ -28,6 +29,12 @@ COOKIE = '__Host-studio_session'
 SESSION_SECONDS = 7 * 24 * 60 * 60
 UPSTREAM = 'http://127.0.0.1:8768'
 MAX_BODY = 13 * 1024 * 1024
+CLIENT_VERSION = 'accounts-v1'
+
+
+def auth_records():
+    data = json.loads(AUTH.read_text(encoding='utf-8'))
+    return data, data.get('users', [{**data, 'id': '01', 'enabled': True}])
 
 
 @contextmanager
@@ -38,7 +45,11 @@ def database():
     try:
         with db:
             db.execute('CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, csrf TEXT NOT NULL, expires REAL NOT NULL)')
+            if 'user_id' not in {r['name'] for r in db.execute('PRAGMA table_info(sessions)')}:
+                db.execute("ALTER TABLE sessions ADD COLUMN user_id TEXT NOT NULL DEFAULT ''")
             db.execute('CREATE TABLE IF NOT EXISTS attempts(ip TEXT NOT NULL, at REAL NOT NULL)')
+            if 'account' not in {r['name'] for r in db.execute('PRAGMA table_info(attempts)')}:
+                db.execute("ALTER TABLE attempts ADD COLUMN account TEXT NOT NULL DEFAULT ''")
             yield db
     finally:
         db.close()
@@ -64,7 +75,12 @@ def session(request):
         return None
     digest = hashlib.sha256(token.encode()).hexdigest()
     with database() as db:
-        return db.execute('SELECT * FROM sessions WHERE token=? AND expires>?', (digest, time.time())).fetchone()
+        row = db.execute('SELECT * FROM sessions WHERE token=? AND expires>?', (digest, time.time())).fetchone()
+    if not row:
+        return None
+    _, users = auth_records()
+    user = next((x for x in users if x['id'] == row['user_id'] and x.get('enabled', True)), None)
+    return {**dict(row), 'username': user['username']} if user else None
 
 
 def allowed_route(method, path):
@@ -99,13 +115,20 @@ async def protect(request: Request, call_next):
             return Response(status_code=403)
         response = Response(status_code=204)
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, X-Studio-CSRF'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, X-Studio-CSRF, X-Studio-Client, X-Studio-User'
         response.headers['Access-Control-Max-Age'] = '600'
     else:
         public = request.url.path in ('/api/health', '/auth/session', '/auth/login')
         request.state.session = session(request)
-        if not public and not request.state.session:
+        data, _ = auth_records()
+        if (data.get('version') == 2 and request.url.path in ('/auth/session', '/auth/login')
+                and request.headers.get('x-studio-client') != CLIENT_VERSION):
+            response = JSONResponse({'detail': '工作台已更新，请刷新网页后登录', 'code': 'update_required'}, status_code=426)
+        elif not public and not request.state.session:
             response = JSONResponse({'detail': '请先登录工作台'}, status_code=401)
+        elif (not public and request.url.path.startswith('/api/') and request.headers.get('x-studio-user')
+              and request.headers['x-studio-user'] != request.state.session['user_id']):
+            response = JSONResponse({'detail': '登录账号已切换，正在刷新工作台', 'code': 'account_changed'}, status_code=409)
         elif request.method not in ('GET', 'HEAD') and (not origin or
                 (not public and not hmac.compare_digest(request.headers.get('x-studio-csrf', ''), request.state.session['csrf']))):
             response = JSONResponse({'detail': '请刷新页面后重试'}, status_code=403)
@@ -135,41 +158,50 @@ async def health():
 @app.get('/auth/session')
 async def auth_session(request: Request):
     s = request.state.session
-    return {'authenticated': bool(s), 'csrf': s['csrf'] if s else None}
+    return {'authenticated': bool(s), 'csrf': s['csrf'] if s else None,
+            'user': {'id': s['user_id'], 'username': s['username']} if s else None}
 
 
 @app.post('/auth/login')
 async def login(request: Request):
     ip = request.headers.get('cf-connecting-ip') or (request.client.host if request.client else 'unknown')
     now = time.time()
+    try:
+        raw = bytearray()
+        async for chunk in request.stream():
+            raw.extend(chunk)
+            if len(raw) > 2048:
+                raise ValueError()
+        body = json.loads(raw)
+        username, password = body.get('username', ''), body.get('password', '')
+        if not isinstance(username, str) or len(username) > 64 or not isinstance(password, str) or len(password) > 256:
+            raise ValueError()
+    except (ValueError, AttributeError):
+        return JSONResponse({'detail': '用户名或密码不正确'}, status_code=401)
     with database() as db:
         db.execute('DELETE FROM attempts WHERE at<?', (now - 300,))
         count = db.execute('SELECT COUNT(*) FROM attempts WHERE ip=?', (ip,)).fetchone()[0]
         total = db.execute('SELECT COUNT(*) FROM attempts').fetchone()[0]
-        if count >= 5 or total >= 30:
+        account_count = db.execute('SELECT COUNT(*) FROM attempts WHERE account=?', (username,)).fetchone()[0]
+        if count >= 5 or total >= 30 or account_count >= 20:
             return JSONResponse({'detail': '尝试次数较多，请五分钟后再试'}, status_code=429)
-        db.execute('INSERT INTO attempts VALUES (?,?)', (ip, now))
+        db.execute('INSERT INTO attempts(ip,at,account) VALUES (?,?,?)', (ip, now, username))
     try:
-        raw = await request.body()
-        if len(raw) > 2048:
-            raise ValueError()
-        body = json.loads(raw)
-        auth = json.loads(AUTH.read_text(encoding='utf-8'))
-        password = body.get('password', '')
-        if not isinstance(password, str) or len(password) > 256:
-            raise ValueError()
+        _, users = auth_records()
+        account = next((x for x in users if hmac.compare_digest(username, x['username']) and x.get('enabled', True)), None)
+        auth = account or users[0]
         digest = await asyncio.to_thread(hashlib.scrypt, password.encode(), salt=bytes.fromhex(auth['salt']), n=16384, r=8, p=1)
-        valid = hmac.compare_digest(digest.hex(), auth['hash']) and hmac.compare_digest(body.get('username', ''), auth['username'])
+        valid = hmac.compare_digest(digest.hex(), auth['hash']) and account is not None
     except Exception:
         valid = False
     if not valid:
         return JSONResponse({'detail': '用户名或密码不正确'}, status_code=401)
     token, csrf = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
     with database() as db:
-        db.execute('DELETE FROM attempts WHERE ip=?', (ip,))
+        db.execute('DELETE FROM attempts WHERE ip=? AND account=?', (ip, username))
         db.execute('DELETE FROM sessions WHERE expires<?', (now,))
-        db.execute('INSERT INTO sessions VALUES (?,?,?)', (hashlib.sha256(token.encode()).hexdigest(), csrf, now + SESSION_SECONDS))
-    response = JSONResponse({'authenticated': True, 'csrf': csrf})
+        db.execute('INSERT INTO sessions(token,csrf,expires,user_id) VALUES (?,?,?,?)', (hashlib.sha256(token.encode()).hexdigest(), csrf, now + SESSION_SECONDS, account['id']))
+    response = JSONResponse({'authenticated': True, 'csrf': csrf, 'user': {'id': account['id'], 'username': account['username']}})
     response.set_cookie(COOKIE, token, max_age=SESSION_SECONDS, secure=True, httponly=True, samesite='lax', path='/')
     return response
 
@@ -196,6 +228,10 @@ async def proxy(request: Request, path: str):
         if len(body) > MAX_BODY:
             return JSONResponse({'detail': '上传内容过大'}, status_code=413)
     headers = {'Origin': UPSTREAM}
+    try:
+        headers.update(assertion(request.state.session['user_id'], request.method, path, DATA / 'bridge-secret.txt'))
+    except (OSError, ValueError):
+        return JSONResponse({'detail': '账号隔离配置尚未就绪，请稍后重试'}, status_code=503)
     if request.headers.get('content-type'):
         headers['Content-Type'] = request.headers['content-type']
     client = httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5), trust_env=False)

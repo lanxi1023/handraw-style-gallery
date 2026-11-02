@@ -10,6 +10,10 @@
   };
   window.studioFetch = async (input, options = {}) => {
     const headers = new Headers(options.headers || {});
+    if (origin) {
+      headers.set('X-Studio-Client', 'accounts-v1');
+      if (window.STUDIO_USER?.id) headers.set('X-Studio-User', window.STUDIO_USER.id);
+    }
     if (origin && csrf && !['GET', 'HEAD'].includes((options.method || 'GET').toUpperCase())) headers.set('X-Studio-CSRF', csrf);
     let response;
     try {
@@ -18,11 +22,29 @@
       if (origin) window.dispatchEvent(new CustomEvent('studio:connection', {detail: 'offline'}));
       throw new Error(origin ? '生图电脑暂时无法连接，请检查电脑和远程连接是否在线。' : error.message);
     }
-    if (origin && response.status === 401) window.dispatchEvent(new CustomEvent('studio:connection', {detail: 'login'}));
+    if (origin && response.status === 409 && (await response.clone().json().catch(() => ({}))).code === 'account_changed')
+      window.dispatchEvent(new CustomEvent('studio:connection', {detail: 'account_changed'}));
+    else if (origin && response.status === 401) window.dispatchEvent(new CustomEvent('studio:connection', {detail: 'login'}));
     else if (origin && response.ok) window.dispatchEvent(new CustomEvent('studio:connection', {detail: 'online'}));
     return response;
   };
   window.studioSetCSRF = value => {csrf = value || '';};
+  window.studioStorage = {
+    getItem(key) {
+      const user = window.STUDIO_USER?.id || (config ? null : '01');
+      if (!user) return null;
+      const scoped = key + ':' + user;
+      let value = localStorage.getItem(scoped);
+      if (user === '01' && value === null && localStorage.getItem(key) !== null) {
+        value = localStorage.getItem(key); localStorage.setItem(scoped, value); localStorage.removeItem(key);
+      }
+      return value;
+    },
+    setItem(key, value) {
+      const user = window.STUDIO_USER?.id || (config ? null : '01');
+      if (user) localStorage.setItem(key + ':' + user, value);
+    }
+  };
   if (origin) document.addEventListener('click', async event => {
     const link = event.target.closest('a[download]');
     if (!link || !link.getAttribute('href')?.startsWith(origin + '/api/')) return;

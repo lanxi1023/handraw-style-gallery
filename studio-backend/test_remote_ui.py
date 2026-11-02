@@ -17,6 +17,8 @@ async def main():
         gateway.CONFIG = gateway.DATA / 'config.json'
         gateway.AUTH = gateway.DATA / 'auth.json'
         gateway.DB = gateway.DATA / 'sessions.db'
+        bridge = Path(__file__).resolve().parent / 'data/bridge-secret.txt'
+        (gateway.DATA / 'bridge-secret.txt').write_text(bridge.read_text(encoding='ascii') if bridge.exists() else '00' * 32, encoding='ascii')
         gateway.CONFIG.write_text(json.dumps({'enabled': True, 'api_origin': 'https://api.lanxi1023.com', 'web_origins': ['https://www.lanxi1023.com']}))
         salt = b'\x00' * 16
         gateway.AUTH.write_text(json.dumps({'username': 'studio', 'salt': salt.hex(), 'hash': hashlib.scrypt(b'test-only-pass', salt=salt, n=16384, r=8, p=1).hex()}))
@@ -58,6 +60,8 @@ async def main():
                 await page.locator('#remoteUser').fill('studio')
                 await page.locator('#remotePassword').fill('test-only-pass')
                 await page.locator('#remoteSubmit').click()
+                await page.locator('#history option[value="all"]').wait_for(state='attached',timeout=30000)
+                await page.locator('#history').select_option('all')
                 await page.locator('#jobs [data-preview]').first.wait_for(timeout=30000)
                 assert await page.locator('#remoteGate').is_hidden()
                 await page.locator('#jobs img').first.wait_for()

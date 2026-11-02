@@ -1,6 +1,7 @@
 """Local-first creative studio, backed by the existing personal image pool."""
 import asyncio, json, mimetypes, os, re, sqlite3, tempfile, time, uuid, zipfile
 from contextlib import asynccontextmanager,contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 from urllib.parse import urlparse,unquote
 import httpx
@@ -9,6 +10,7 @@ from fastapi.responses import FileResponse, Response,RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.background import BackgroundTask
+from bridge_identity import verified_owner
 
 ROOT=Path(__file__).resolve().parent
 DATA=ROOT/'data'; UPLOADS=DATA/'uploads'; DB=DATA/'studio.sqlite3'
@@ -28,6 +30,17 @@ from prompt_style import GRAPHIC_TEXT_SUFFIX,REFERENCE_ISOLATION_ZH,REFERENCE_IS
 POOL_URL='http://127.0.0.1:8000'
 ORIGIN='http://127.0.0.1:8768'
 app_jobs=set()
+account_context=ContextVar('studio_account',default='01')
+
+def owner():return account_context.get()
+
+def require_upload(name):
+    if not re.fullmatch(r'[a-f0-9]{32}\.jpg',name):raise HTTPException(404,'素材不存在')
+    found=rows('SELECT name FROM uploads WHERE name=? AND owner_id=?',(name,owner()))
+    if not found:raise HTTPException(404,'素材不存在')
+
+def register_upload(name):
+    with conn() as c:c.execute('INSERT INTO uploads(name,owner_id,created_at) VALUES (?,?,?)',(name,owner(),time.time()))
 
 @contextmanager
 def conn():
@@ -47,6 +60,16 @@ def initialize():
         if 'favorite' not in {r['name'] for r in c.execute('PRAGMA table_info(jobs)')}:
             c.execute('ALTER TABLE jobs ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0')
         c.execute('CREATE TABLE IF NOT EXISTS assets (id TEXT PRIMARY KEY, url TEXT NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL, created_at REAL NOT NULL)')
+        for table in ('jobs','assets'):
+            if 'owner_id' not in {r['name'] for r in c.execute('PRAGMA table_info('+table+')')}:
+                c.execute("ALTER TABLE "+table+" ADD COLUMN owner_id TEXT NOT NULL DEFAULT '01'")
+        migrate_uploads=not c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='uploads'").fetchone()
+        c.execute('CREATE TABLE IF NOT EXISTS uploads (name TEXT PRIMARY KEY,owner_id TEXT NOT NULL,created_at REAL NOT NULL)')
+        for path in UPLOADS.glob('*.jpg') if migrate_uploads else ():
+            if re.fullmatch(r'[a-f0-9]{32}\.jpg',path.name):
+                c.execute("INSERT OR IGNORE INTO uploads VALUES (?,'01',?)",(path.name,path.stat().st_mtime))
+        c.execute('CREATE INDEX IF NOT EXISTS jobs_owner_created ON jobs(owner_id,created_at)')
+        c.execute('CREATE INDEX IF NOT EXISTS assets_owner_created ON assets(owner_id,created_at)')
         # A lost submission response cannot safely be repeated without confirmation.
         c.execute("UPDATE jobs SET state='uncertain',error='提交结果未确认，请查看任务记录后再重试。' WHERE state='submitting' AND pool_id IS NULL")
 
@@ -77,6 +100,8 @@ def safe_ref(value):
     if value.startswith('/costume/') or value.startswith('/poses/') or value.startswith('/uploads/') or value.startswith('/styles/'):
         path=unquote(urlparse(value).path)
         if '..' in path.split('/') or '\\' in path:raise ValueError('参考图路径无效')
+        if path.startswith('/uploads/'):
+            require_upload(path[len('/uploads/'):])
         return ORIGIN+value
     parsed=urlparse(value)
     if parsed.scheme=='https' and parsed.hostname in {'ai-portrait-gallery.pages.dev','ai-pose-depth-gallery.pages.dev'}:
@@ -186,9 +211,23 @@ async def local_only(request:Request,call_next):
     host=request.headers.get('host','').lower();origin=request.headers.get('origin')
     if host not in ('127.0.0.1:8768','localhost:8768') or (origin and origin not in ('http://127.0.0.1:8768','http://localhost:8768')):
         return Response('Local access only',status_code=403)
-    response=await call_next(request)
-    response.headers['X-Content-Type-Options']='nosniff'
-    return response
+    principal='01'
+    scoped=any(request.headers.get(x) for x in ('x-studio-owner','x-studio-time','x-studio-proof'))
+    if scoped:
+        try:principal=verified_owner(request,DATA/'bridge-secret.txt')
+        except (OSError,ValueError):return Response(status_code=403)
+    token=account_context.set(principal)
+    try:
+        # The local pool can fetch submitted references directly over loopback.
+        # Every gateway request carries a verified account and must pass ownership.
+        if scoped and request.url.path.startswith('/uploads/'):
+            try:require_upload(request.url.path[len('/uploads/'):])
+            except HTTPException:return Response(status_code=404)
+        response=await call_next(request)
+        response.headers['X-Content-Type-Options']='nosniff'
+        response.headers['Cache-Control']='private, no-store'
+        return response
+    finally:account_context.reset(token)
 
 app.mount('/static',StaticFiles(directory=str(ROOT/'static')),name='static')
 app.mount('/catalog',StaticFiles(directory=str(CATALOG)),name='catalog')
@@ -244,6 +283,7 @@ async def upload(file:UploadFile=File(...)):
             im=ImageOps.exif_transpose(im);im.thumbnail((2048,2048));im=im.convert('RGB')
             name=uuid.uuid4().hex+'.jpg';im.save(UPLOADS/name,quality=90,optimize=True)
     except Exception:raise HTTPException(400,'请上传有效图片')
+    register_upload(name)
     return {'url':'/uploads/'+name}
 
 @app.post('/api/batches')
@@ -273,8 +313,8 @@ async def create_batch(body:Batch):
     batch=uuid.uuid4().hex;now=time.time()
     with conn() as c:
         for item,prompt,refs in prepared:
-            c.execute('INSERT INTO jobs (id,batch_id,created_at,updated_at,state,prompt,refs,ratio,style,label,config) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-                (uuid.uuid4().hex,batch,now,now,'waiting',prompt,json.dumps(refs,ensure_ascii=False),item.ratio or body.ratio,item.style or '',item.label,json.dumps(item.model_dump(),ensure_ascii=False)))
+            c.execute('INSERT INTO jobs (id,batch_id,created_at,updated_at,state,prompt,refs,ratio,style,label,config,owner_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                (uuid.uuid4().hex,batch,now,now,'waiting',prompt,json.dumps(refs,ensure_ascii=False),item.ratio or body.ratio,item.style or '',item.label,json.dumps(item.model_dump(),ensure_ascii=False),owner()))
     return {'batch_id':batch,'count':len(prepared)}
 
 @app.post('/api/compile')
@@ -290,7 +330,7 @@ class Favorite(BaseModel):
 @app.post('/api/jobs/{job_id}/favorite')
 async def favorite(job_id:str,body:Favorite):
     with conn() as c:
-        if not c.execute('UPDATE jobs SET favorite=? WHERE id=?',(int(body.favorite),job_id)).rowcount:raise HTTPException(404,'作品不存在')
+        if not c.execute('UPDATE jobs SET favorite=? WHERE id=? AND owner_id=?',(int(body.favorite),job_id,owner())).rowcount:raise HTTPException(404,'作品不存在')
     return {'ok':True}
 
 class Asset(BaseModel):
@@ -299,39 +339,46 @@ class Asset(BaseModel):
     category:str
 
 @app.get('/api/assets')
-async def assets():return {'items':rows('SELECT * FROM assets ORDER BY created_at DESC')}
+async def assets():return {'items':rows('SELECT id,url,name,category,created_at FROM assets WHERE owner_id=? ORDER BY created_at DESC',(owner(),))}
 
 @app.post('/api/assets')
 async def add_asset(body:Asset):
     if body.category not in {'人物','衣服','场景','其他'}:raise HTTPException(400,'素材分类无效')
     if not body.url.startswith('/uploads/') or not re.fullmatch(r'/uploads/[a-f0-9]{32}\.jpg',body.url) or not (UPLOADS/Path(body.url).name).is_file():raise HTTPException(400,'请先上传本机图片')
-    with conn() as c:c.execute('INSERT INTO assets VALUES (?,?,?,?,?)',(uuid.uuid4().hex,body.url,body.name,body.category,time.time()))
+    require_upload(Path(body.url).name)
+    with conn() as c:c.execute('INSERT INTO assets(id,url,name,category,created_at,owner_id) VALUES (?,?,?,?,?,?)',(uuid.uuid4().hex,body.url,body.name,body.category,time.time(),owner()))
     return {'ok':True}
 
 @app.delete('/api/assets/{asset_id}')
 async def delete_asset(asset_id:str):
-    with conn() as c:c.execute('DELETE FROM assets WHERE id=?',(asset_id,))
+    with conn() as c:
+        if not c.execute('DELETE FROM assets WHERE id=? AND owner_id=?',(asset_id,owner())).rowcount:raise HTTPException(404,'素材不存在')
     return {'ok':True}
 
 @app.get('/api/batches')
 async def batches():
-    return {'items':rows('SELECT batch_id,MAX(created_at) AS created_at,COUNT(*) AS count FROM jobs GROUP BY batch_id ORDER BY created_at DESC LIMIT 100')}
+    return {'items':rows('SELECT batch_id,MAX(created_at) AS created_at,COUNT(*) AS count FROM jobs WHERE owner_id=? GROUP BY batch_id ORDER BY created_at DESC LIMIT 100',(owner(),))}
 
 @app.get('/api/jobs')
 async def jobs(batch_id:str=''):
     if batch_id and not re.fullmatch(r'[0-9a-f]{32}',batch_id):raise HTTPException(400,'批次编号无效')
-    where='WHERE batch_id=?' if batch_id else ''
-    return {'items':[public_job(r) for r in rows('SELECT * FROM jobs '+where+' ORDER BY CASE WHEN state=\'completed\' THEN 0 ELSE 1 END, CASE WHEN state=\'completed\' THEN finished_at END ASC, created_at DESC LIMIT 200',(batch_id,) if batch_id else ())]}
+    where='WHERE owner_id=?'+(' AND batch_id=?' if batch_id else '')
+    return {'items':[public_job(r) for r in rows('SELECT * FROM jobs '+where+' ORDER BY CASE WHEN state=\'completed\' THEN 0 ELSE 1 END, CASE WHEN state=\'completed\' THEN finished_at END ASC, created_at DESC LIMIT 200',(owner(),batch_id) if batch_id else (owner(),))]}
 
 @app.post('/api/jobs/{job_id}/retry')
 async def retry(job_id:str):
-    found=rows('SELECT * FROM jobs WHERE id=?',(job_id,))
-    if not found or found[0]['state']!='failed':raise HTTPException(409,'只能重试失败的任务')
+    found=rows('SELECT * FROM jobs WHERE id=? AND owner_id=?',(job_id,owner()))
+    if not found:raise HTTPException(404,'作品不存在')
+    if found[0]['state']!='failed':raise HTTPException(409,'只能重试失败的任务')
     update(job_id,state='waiting',pool_id=None,image_url=None,error=None,finished_at=None)
     return {'ok':True}
 
 @app.get('/api/jobs/{job_id}/image')
 async def image(job_id:str):
+    if not rows('SELECT id FROM jobs WHERE id=? AND owner_id=?',(job_id,owner())):raise HTTPException(404,'作品不存在')
+    return await cached_image(job_id)
+
+async def cached_image(job_id:str):
     found=rows('SELECT * FROM jobs WHERE id=?',(job_id,))
     if not found or found[0]['state']!='completed':raise HTTPException(404,'图片尚未生成')
     if not re.fullmatch(r'[a-f0-9]{32}',job_id):raise HTTPException(400,'任务编号无效')
@@ -359,8 +406,9 @@ async def download_images(body:DownloadSelection):
     if len(set(ids))!=len(ids) or any(not re.fullmatch(r'[a-f0-9]{32}',x) for x in ids):
         raise HTTPException(400,'选择的图片编号无效')
     marks=','.join('?' for _ in ids)
-    found=rows(f'SELECT id,state FROM jobs WHERE id IN ({marks})',ids)
-    if len(found)!=len(ids) or any(x['state']!='completed' for x in found):
+    found=rows(f'SELECT id,state FROM jobs WHERE owner_id=? AND id IN ({marks})',[owner(),*ids])
+    if len(found)!=len(ids):raise HTTPException(404,'作品不存在')
+    if any(x['state']!='completed' for x in found):
         raise HTTPException(409,'部分图片尚未生成，请刷新后重新选择')
     archive=None
     try:
@@ -390,6 +438,7 @@ async def image_reference(job_id:str):
         name=uuid.uuid4().hex+'.jpg'
         with Image.open(DATA/'images'/job_id) as im:
             im=ImageOps.exif_transpose(im); im.thumbnail((2048,2048)); im.convert('RGB').save(UPLOADS/name,quality=90,optimize=True)
+        register_upload(name)
         return {'url':'/uploads/'+name}
     except Exception:raise HTTPException(400,'无法使用这张作品作为参考')
 
@@ -424,7 +473,7 @@ async def handle_job(job_id):
                     image=result.get('image_url') or result.get('url')
                     if not image:raise RuntimeError('任务已完成，但没有返回图片')
                     update(job_id,state='completed',image_url=image,error=None,finished_at=time.time())
-                    try:await globals()['image'](job_id)
+                    try:await cached_image(job_id)
                     except HTTPException:pass
                     return
                 if status=='failed':

@@ -15,6 +15,7 @@ def main():
         gateway.CONFIG = gateway.DATA / 'config.json'
         gateway.AUTH = gateway.DATA / 'auth.json'
         gateway.DB = gateway.DATA / 'sessions.db'
+        (gateway.DATA / 'bridge-secret.txt').write_text('00' * 32, encoding='ascii')
         gateway.CONFIG.write_text(json.dumps({'enabled': True, 'api_origin': 'https://api.lanxi1023.com', 'web_origins': ['https://www.lanxi1023.com']}))
         salt = bytes.fromhex('00' * 16)
         gateway.AUTH.write_text(json.dumps({'username': 'studio', 'salt': salt.hex(), 'hash': hashlib.scrypt(b'test-only-pass', salt=salt, n=16384, r=8, p=1).hex()}))
