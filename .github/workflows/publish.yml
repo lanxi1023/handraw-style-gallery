@@ -29,6 +29,7 @@ jobs:
           cp dark.html site/dark.html
           cp dark/index.html site/dark/index.html
           cp -R assets site/assets
+          cp -R studio site/studio
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
