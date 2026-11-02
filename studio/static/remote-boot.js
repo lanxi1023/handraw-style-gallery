@@ -13,7 +13,7 @@
       status.textContent = '正在载入素材和作品…';
       await script(studioMedia('/catalog/data.js'));
       await script(studioMedia('/catalog/extra-data.js'));
-      await script('./static/redesign.js?v=20261102remote1');
+      await script('./static/redesign.js?v=20261102remote2');
       loaded = true;
     }
     gate.hidden = true; shell.hidden = false; nav.hidden = false;
@@ -48,7 +48,7 @@
     catch (error) {document.querySelector('#remoteConnection').textContent = error.message;}
   };
   window.addEventListener('studio:connection', event => {
-    document.querySelector('#remoteConnection').textContent = event.detail === 'login' ? '登录已过期，请重新登录' : '生图电脑暂时离线';
+    document.querySelector('#remoteConnection').textContent = event.detail === 'online' ? '已连接生图电脑' : event.detail === 'login' ? '登录已过期，请重新登录' : '生图电脑暂时离线';
     if (event.detail === 'login') {
       shell.hidden = true; nav.hidden = true; gate.hidden = false; status.textContent = '登录已过期，请重新登录。';
     }

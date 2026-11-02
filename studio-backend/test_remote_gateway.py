@@ -48,7 +48,7 @@ def main():
             assert 'cookie' not in calls[-1].headers
             assert client.post('/auth/logout', headers={**origin, 'X-Studio-CSRF': csrf}).status_code == 200
             assert client.get('/api/jobs', headers=origin).status_code == 401
-            for _ in range(4):
+            for _ in range(5):
                 assert client.post('/auth/login', headers=origin, json={'password': 'wrong'}).status_code == 401
             assert client.post('/auth/login', headers=origin, json={'password': 'wrong'}).status_code == 429
             gateway.CONFIG.write_text('{"enabled":false}')

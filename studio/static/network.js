@@ -19,6 +19,7 @@
       throw new Error(origin ? '生图电脑暂时无法连接，请检查电脑和远程连接是否在线。' : error.message);
     }
     if (origin && response.status === 401) window.dispatchEvent(new CustomEvent('studio:connection', {detail: 'login'}));
+    else if (origin && response.ok) window.dispatchEvent(new CustomEvent('studio:connection', {detail: 'online'}));
     return response;
   };
   window.studioSetCSRF = value => {csrf = value || '';};

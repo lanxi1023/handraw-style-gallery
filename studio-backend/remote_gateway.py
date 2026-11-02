@@ -166,6 +166,7 @@ async def login(request: Request):
         return JSONResponse({'detail': '用户名或密码不正确'}, status_code=401)
     token, csrf = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
     with database() as db:
+        db.execute('DELETE FROM attempts WHERE ip=?', (ip,))
         db.execute('DELETE FROM sessions WHERE expires<?', (now,))
         db.execute('INSERT INTO sessions VALUES (?,?,?)', (hashlib.sha256(token.encode()).hexdigest(), csrf, now + SESSION_SECONDS))
     response = JSONResponse({'authenticated': True, 'csrf': csrf})

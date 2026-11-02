@@ -74,6 +74,15 @@ async def main():
                 assert await page.locator('a[href="/open-pool"]').count() == 0
                 assert not errors, errors
                 assert not bad_requests, bad_requests
+                if width == 1440:
+                    async def offline(route):
+                        await route.abort()
+                    await page.route('https://api.lanxi1023.com/api/health', offline)
+                    await page.evaluate("studioFetch('/api/health').catch(() => null)")
+                    assert await page.locator('#remoteConnection').inner_text() == '生图电脑暂时离线'
+                    await page.unroute('https://api.lanxi1023.com/api/health', offline)
+                    await page.evaluate("studioFetch('/api/batches')")
+                    assert await page.locator('#remoteConnection').inner_text() == '已连接生图电脑'
                 await page.locator('#remoteLogout').click()
                 await page.locator('#remotePassword').wait_for(state='visible')
                 assert await page.locator('main').is_hidden()
