@@ -21,7 +21,7 @@ def build(ready=False):
     html = re.sub(r'<a href="/open-pool"[^>]*>.*?</a>', '', html)
     html = html.replace('<nav>', '<nav hidden>')
     html = html.replace('<main>', '<main hidden>')
-    html = html.replace('</header>', '<span id="remoteAccount"></span><span id="remoteConnection" role="status">正在连接</span><button id="remoteLogout" hidden>退出登录</button></header>')
+    html = html.replace('</header>', '<span id="remoteAccount"></span><span id="remoteConnection" role="status">正在连接</span><button id="remoteLogout" class="secondary" hidden>退出登录</button></header>')
     gate = '''<section id="remoteGate" class="remote-gate"><form id="remoteLogin" class="remote-login">
 <h1>灵感工作室</h1><p>登录后，继续你的创作。</p>
 <label for="remoteUser">账号</label><input id="remoteUser" name="username" autocomplete="username" required placeholder="输入账号">
@@ -30,7 +30,7 @@ def build(ready=False):
 <p id="remoteStatus" role="status">正在连接生图电脑…</p><button id="remoteReconnect" type="button" class="secondary">重新连接</button>
 </form></section>'''
     html = html.replace('</header>', '</header>' + gate)
-    html = html.replace('</body>', '<script>window.STUDIO_REMOTE=' + json.dumps({'apiOrigin': 'https://api.lanxi1023.com', 'enabled': ready}) + ';</script><script src="./static/network.js?v=20261102accounts1"></script><script src="./static/remote-boot.js?v=20261102accounts1"></script></body>')
+    html = html.replace('</body>', '<script>window.STUDIO_REMOTE=' + json.dumps({'apiOrigin': 'https://api.lanxi1023.com', 'enabled': ready}) + ';</script><script src="./static/network.js?v=20261102accounts2"></script><script src="./static/remote-boot.js?v=20261102accounts2"></script></body>')
     (OUT / 'index.html').write_text(html, encoding='utf-8')
     print('Built public frontend only:', OUT)
 

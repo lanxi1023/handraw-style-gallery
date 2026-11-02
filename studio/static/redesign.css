@@ -41,3 +41,5 @@ header{height:62px}.intro{padding:24px 0 14px}.intro h1{font-size:clamp(30px,3vw
 .remote-login label{font-weight:600;margin-top:8px}.remote-login .primary{margin-top:12px}
 #remoteConnection{font-size:13px;color:#687e72;margin-left:auto}#remoteLogout{margin-left:12px}
 @media(max-width:600px){.remote-login{padding:24px}.remote-gate{padding:24px 16px}#remoteConnection{width:100%;margin:8px 0 0}}
+header{gap:24px}#remoteAccount{font-size:13px;padding:4px 10px;border-radius:999px;background:#e9eee9;color:#385242;white-space:nowrap}#remoteAccount:empty{display:none}
+@media(max-width:700px){body header{display:grid;grid-template-columns:minmax(0,1fr) auto auto;height:auto;min-height:65px;gap:10px 12px;padding:14px 18px}header .brand{grid-column:1;grid-row:1;font-size:16px;white-space:nowrap}header nav{grid-column:1/3;grid-row:2;gap:22px}#remoteAccount{grid-column:2;grid-row:1;font-size:12px;padding:3px 8px}#remoteLogout{grid-column:3;grid-row:1;margin:0;padding:6px 10px;font-size:12px}#remoteConnection{grid-column:3;grid-row:2;width:auto;margin:0;font-size:11px;white-space:nowrap}}
