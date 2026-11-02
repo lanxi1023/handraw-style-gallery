@@ -48,6 +48,9 @@ def main():
             assert c.get('/api/assets').json()['items']==[]
             assert c.get('/api/styles').status_code==200
         print('All four logins and external cross-account access checks passed.',flush=True)
+        if saved.get('cleaned'):
+            print('The real generation was already verified and its fixtures cleaned; no additional image will be submitted.',flush=True)
+            return
         if not saved.get('upload'):
             image=io.BytesIO();Image.new('RGB',(512,512),(38,105,190)).save(image,format='PNG')
             r=b.post('/api/upload',files={'file':('test-color.png',image.getvalue(),'image/png')});r.raise_for_status()
