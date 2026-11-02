@@ -55,6 +55,7 @@ async def main():
                 await page.route('https://www.lanxi1023.com/**', web)
                 await page.route('https://api.lanxi1023.com/**', api)
                 await page.goto('https://www.lanxi1023.com/studio/', wait_until='domcontentloaded')
+                await page.locator('#remoteUser').fill('studio')
                 await page.locator('#remotePassword').fill('test-only-pass')
                 await page.locator('#remoteSubmit').click()
                 await page.locator('#jobs [data-preview]').first.wait_for(timeout=30000)

@@ -24,7 +24,7 @@ def build(ready=False):
     html = html.replace('</header>', '<span id="remoteConnection" role="status">正在连接</span><button id="remoteLogout" hidden>退出登录</button></header>')
     gate = '''<section id="remoteGate" class="remote-gate"><form id="remoteLogin" class="remote-login">
 <h1>灵感工作室</h1><p>登录后，继续你的创作。</p>
-<label for="remoteUser">用户名</label><input id="remoteUser" name="username" autocomplete="username" required value="studio">
+<label for="remoteUser">账号</label><input id="remoteUser" name="username" autocomplete="username" required placeholder="输入账号">
 <label for="remotePassword">密码</label><input id="remotePassword" name="password" type="password" autocomplete="current-password" required maxlength="256">
 <button id="remoteSubmit" class="primary" type="submit">登录工作台</button>
 <p id="remoteStatus" role="status">正在连接生图电脑…</p><button id="remoteReconnect" type="button" class="secondary">重新连接</button>

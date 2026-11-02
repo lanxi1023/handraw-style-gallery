@@ -27,3 +27,12 @@ GitHub Pages 仅发布 `release/studio/` 中明确列出的网页文件。`data/
 `test_remote_ui.py` 使用临时凭据和模拟 HTTPS 域名，连接现有本地作品，验证桌面/手机布局、登录、素材与图片读取、选择打包下载、退出。它不会提交生图任务或更改实际账号。
 
 本机模拟通过并不代表外网通道已部署。真实域名、网络速度、手机网络及生图端到端测试需在开通后完成。
+
+## 2026-11-02 固定连接接入
+
+已在用户 Cloudflare 账号创建 `inspiration-studio` 固定通道，API 域名为 `api.lanxi1023.com`，只连接回环端口 `8769`。
+DNSPod 中全部三条网站记录已核对保留为 DNS only；DNS 托管已切换至 Cloudflare，域名注册仍在腾讯云。公网 HTTPS 健康检查已通过。
+
+连接令牌仅放在本机 `data/tunnel-token.txt`，使用当前 Windows 用户及 SYSTEM 可访问的文件权限，不进入 GitHub。`run-background.ps1` 配合 `InspirationStudioBackground` 登录启动任务，每 30 秒检查本机服务和通道，发现退出后恢复。
+
+完整外网生图验收记录保存在本机 `data/remote-live-check.json`，其中 `state=completed` 才表示真实生图、图片读取和 ZIP 下载均已通过。真实移动网络的可达性仍取决于用户手机网络。
