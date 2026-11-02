@@ -25,13 +25,16 @@ def credentials():
 def client_for(name, password):
     client=httpx.Client(base_url='https://api.lanxi1023.com',headers={'Origin':'https://www.lanxi1023.com','X-Studio-Client':'accounts-v1'},timeout=60)
     r=client.post('/auth/login',json={'username':name,'password':password});r.raise_for_status()
-    assert r.json()['user']['id']==name
-    client.headers.update({'X-Studio-CSRF':r.json()['csrf'],'X-Studio-User':name})
+    assert r.json()['user']['username']==name
+    client.headers.update({'X-Studio-CSRF':r.json()['csrf'],'X-Studio-User':r.json()['user']['id']})
     return client
 
 
 def main():
-    clients={name:client_for(name,password) for name,password in credentials().items()}
+    clients={}
+    for name,password in credentials().items():
+        client=client_for(name,password)
+        clients[client.get('/auth/session').json()['user']['id']]=client
     saved=json.loads(RECORD.read_text()) if RECORD.exists() else {}
     def persist():RECORD.write_text(json.dumps(saved,indent=2),encoding='utf-8')
     try:

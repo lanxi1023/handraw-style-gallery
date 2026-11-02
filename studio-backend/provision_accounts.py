@@ -23,12 +23,14 @@ def main():
     users = data.get('users') or [{**data, 'id': '01', 'enabled': True}]
     created = []
     for name in ('02', '03', '04'):
-        if any(x['username'] == name for x in users):
+        if any(x['id'] == name or x['username'] == name for x in users):
             continue
         password, salt = secrets.token_urlsafe(9), secrets.token_bytes(16)
         users.append({'id': name, 'username': name, 'salt': salt.hex(),
                       'hash': hashlib.scrypt(password.encode(), salt=salt, n=16384, r=8, p=1).hex(), 'enabled': True})
         created.append((name, password))
+    assert len({x['id'] for x in users}) == len(users)
+    assert len({x['username'] for x in users}) == len(users)
     auth_path.write_text(json.dumps({'version': 2, 'users': users}, indent=2), encoding='utf-8')
     key = DATA / 'bridge-secret.txt'
     if not key.exists():

@@ -30,7 +30,7 @@ async def main():
     async with async_playwright() as p:
         exe=next(Path('E:/号池/runtime/VirtualBrowser/VirtualBrowser').glob('*/VirtualBrowser.exe'))
         browser=await p.chromium.launch(headless=True,executable_path=str(exe))
-        for name in ('01','02','03','04'):
+        for name in passwords:
             context=await browser.new_context(viewport={'width':1440,'height':1400})
             page=await context.new_page();errors=[]
             page.on('pageerror',lambda e:errors.append(str(e)))
@@ -43,7 +43,7 @@ async def main():
                 await page.screenshot(path=str(ROOT/'data/verification/account-02-isolated.png'))
             else:
                 assert await page.locator('#jobs [data-preview="'+record['job_id']+'"]').count()==0
-                if name in ('02','03','04'):
+                if name!='01':
                     assert await page.locator('#jobs .job').count()==0
                     assert await page.locator('#history option').count()==1
                 if name=='02':
