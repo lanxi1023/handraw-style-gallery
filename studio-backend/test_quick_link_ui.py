@@ -1,6 +1,7 @@
 """Verify the private link with fresh browsers, without submitting image jobs."""
 import asyncio
 import json
+import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 from playwright.async_api import async_playwright
@@ -10,7 +11,8 @@ ROOT=Path(__file__).resolve().parent
 
 
 async def main():
-    build(ready=True)
+    live='--live' in sys.argv
+    if not live:build(ready=True)
     private_url=(ROOT/'data/quick-link-01.txt').read_text(encoding='utf-8').strip()
     token=private_url.split('#access=',1)[1]
     async with async_playwright() as p:
@@ -20,7 +22,7 @@ async def main():
             context=await browser.new_context(viewport={'width':width,'height':height})
             page=await context.new_page();urls=[];errors=[]
             page.on('request',lambda r:urls.append(r.url))
-            page.on('pageerror',lambda e:errors.append(type(e).__name__))
+            page.on('pageerror',lambda e:errors.append(str(e).replace(token,'<private credential>')))
             async def web(route):
                 path=urlsplit(route.request.url).path
                 if not path.startswith('/studio/'):
@@ -31,8 +33,11 @@ async def main():
                     await route.fulfill(status=404);return
                 mime={'.js':'application/javascript','.css':'text/css','.html':'text/html'}.get(target.suffix,'application/octet-stream')
                 await route.fulfill(status=200,body=target.read_bytes(),content_type=mime)
-            await page.route('https://www.lanxi1023.com/**',web)
+            if not live:await page.route('https://www.lanxi1023.com/**',web)
             await page.goto(private_url,wait_until='domcontentloaded')
+            # Repeated connection clicks must not execute catalog/UI scripts twice.
+            if not live:
+                await page.locator('#remoteReconnect').click()
             await page.locator('main').wait_for(state='visible',timeout=30000)
             assert await page.locator('#remoteAccount').inner_text()=='账号 01'
             assert 'access=' not in page.url and token not in page.url

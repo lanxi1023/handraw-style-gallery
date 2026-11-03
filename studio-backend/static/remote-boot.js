@@ -17,21 +17,29 @@
   if (authChannel) authChannel.onmessage = event => {
     if (loaded && event.data?.userId !== window.STUDIO_USER?.id) location.reload();
   };
-  const script = src => new Promise((resolve, reject) => {
-    const s = document.createElement('script'); s.src = src;
-    if (src.startsWith(window.STUDIO_REMOTE.apiOrigin)) s.crossOrigin = 'use-credentials';
-    s.onload = resolve; s.onerror = reject; document.body.append(s);
-  });
+  const loadingScripts = new Map();
+  const script = src => {
+    if (loadingScripts.has(src)) return loadingScripts.get(src);
+    const pending = new Promise((resolve, reject) => {
+      const s = document.createElement('script'); s.src = src;
+      if (src.startsWith(window.STUDIO_REMOTE.apiOrigin)) s.crossOrigin = 'use-credentials';
+      s.onload = resolve;
+      s.onerror = () => {loadingScripts.delete(src); s.remove(); reject(Error('素材载入失败，请重新连接。'));};
+      document.body.append(s);
+    });
+    loadingScripts.set(src, pending);
+    return pending;
+  };
   async function reveal(user) {
     if (!user?.id) throw Error('工作台正在更新，请刷新网页后登录。');
-    if (loaded && window.STUDIO_USER?.id !== user.id) { location.reload(); return; }
+    if ((loaded || loadingScripts.size) && window.STUDIO_USER?.id !== user.id) { location.reload(); return; }
     window.STUDIO_USER = user;
     document.querySelector('#remoteAccount').textContent = '账号 ' + user.username;
     if (!loaded) {
       status.textContent = '正在载入素材和作品…';
       await script(studioMedia('/catalog/data.js'));
       await script(studioMedia('/catalog/extra-data.js'));
-      await script('./static/redesign.js?v=20261103quickLink1');
+      await script('./static/redesign.js?v=20261103quickLink2');
       loaded = true;
     }
     gate.hidden = true; shell.hidden = false; nav.hidden = false;
