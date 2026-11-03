@@ -401,15 +401,10 @@ async def jobs(batch_id:str=''):
 async def job_details(job_id:str):
     found=rows('SELECT * FROM jobs WHERE id=? AND owner_id=?',(job_id,owner()))
     if not found:raise HTTPException(404,'作品不存在')
-    row=found[0];result=public_job(row)
-    result.update(prompt=row['prompt'],model='gpt-image2-1k',resolution='1K',retention_days=RETENTION_DAYS,dimensions=None)
-    cached=DATA/'images'/job_id
-    if row['state']=='completed' and not is_expired(row) and cached.is_file():
-        try:
-            from PIL import Image
-            with Image.open(cached) as image:result['dimensions']={'width':image.width,'height':image.height}
-        except (OSError,ValueError):pass
-    return result
+    try:config=json.loads(found[0]['config'])
+    except (ValueError,TypeError):config={}
+    keys=('outfit','pose','face','style','outfit_id','pose_id','face_id')
+    return {'id':job_id,'config':{key:config[key] for key in keys if config.get(key)}}
 
 @app.post('/api/jobs/{job_id}/retry')
 async def retry(job_id:str):

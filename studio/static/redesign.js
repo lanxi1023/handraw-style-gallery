@@ -163,32 +163,25 @@ $('#preview').addEventListener('keydown',e=>{if(e.key==='ArrowLeft')$('#previewP
 $('#closePreview').onclick=()=>$('#preview').close();
 
 function matchingMaterial(kind,config){
- const source=config[kind];if(!source)return '未选择';
+ const source=config[kind];if(!source||String(source).includes('/uploads/'))return '';
  const normal=value=>{let v=asset(value);try{return new URL(v,location.origin).pathname}catch(e){return v}};
  const item=(catalogs[kind]||[]).find(x=>normal(url(x))===normal(source));
  const saved=config[kind+'_id'];
- if(String(source).includes('/uploads/'))return saved&&saved!=='自定义'&&saved!=='素材库'?String(saved)+' · 自定义上传':'自定义上传';
  const fallback=String(source).match(/(?:SPR|SUM|AUT|WIN|[A-Z]{2,})-\d+|(?:^|_)P\d+/)?.[0]?.replace(/^_/,'');
  const id=saved||item?.id||fallback;
- return id?String(id)+(item?.name&&item.name!==id?' · '+item.name:''):'历史记录未保存编号';
+ return id&&!['自定义','素材库'].includes(String(id))?String(id):'';
 }
-const detailTime=value=>value?new Date(value*1000).toLocaleString('zh-CN'):'未记录';
 let detailSerial=0;
 async function openJobDetails(id){
  const serial=++detailSerial,dialog=$('#jobDetails'),box=$('#jobDetailsContent');
- box.innerHTML='<p class="muted" role="status">正在读取生成参数…</p>';
+ box.innerHTML='<p class="muted" role="status">正在读取…</p>';
  if(!dialog.open)dialog.showModal();
  try{
-  let response=await studioFetch('/api/jobs/'+encodeURIComponent(id)+'/details'),j=await response.json();
-  if(!response.ok)throw Error(typeof j.detail==='string'?j.detail:'详情暂时无法读取，请稍后重试。');
+  let j=jobsCache.find(x=>x.id===id);
+  if(!j){let response=await studioFetch('/api/jobs/'+encodeURIComponent(id)+'/details');j=await response.json();if(!response.ok)throw Error(typeof j.detail==='string'?j.detail:'暂时无法读取，请稍后重试。')}
   if(serial!==detailSerial||!dialog.open)return;
-  let c=j.config||{},style=styles.find(x=>x.id===c.style),layout=handdrawOptions.layout.find(x=>x.id===c.layout),color=handdrawOptions.color.find(x=>x.id===c.color);
-  let fields=[['创作方式',({general:'通用生图',portrait:'人物写真',handdraw:'手绘创作'})[c.mode]||'历史任务'],['提交模型',j.model],['清晰度',j.resolution],['画面比例',j.ratio],['实际尺寸',j.dimensions?j.dimensions.width+' × '+j.dimensions.height+' 像素':j.state==='expired'?'图片已清理':'暂无文件尺寸'],['提交时间',detailTime(j.created_at)],['生成完成',detailTime(j.finished_at)],['图片保留至',detailTime(j.image_expires_at)]];
-  if(c.mode==='portrait')fields.push(['衣服编号',matchingMaterial('outfit',c)],['姿势编号',matchingMaterial('pose',c)],['脸部编号',matchingMaterial('face',c)]);
-  if(c.style)fields.push(['画风',c.style+(style?' · '+style.name:'')]);
-  if(c.layout)fields.push(['图型',c.layout+(layout?' · '+layout.name:'')]);
-  if(c.color)fields.push(['配色',c.color+(color?' · '+color.name:'')]);
-  box.innerHTML=(j.state==='expired'?'<p class="detail-expired">图片已按 30 天规则清理，以下生成参数和任务记录仍保留。</p>':'')+'<dl class="job-detail-fields">'+fields.map(([label,value])=>`<div><dt>${esc(label)}</dt><dd>${esc(value??'未记录')}</dd></div>`).join('')+'</dl><h3>本次实际提示词</h3><pre class="detail-prompt">'+esc(j.prompt||c.compiled_prompt||c.prompt||'未记录')+'</pre>'+(c.references?.length?'<h3>参考图片用途</h3><ol class="detail-references">'+c.references.map(x=>'<li>'+esc(x.purpose||'参考画面')+'</li>').join('')+'</ol>':'');
+  let c=j.config||{},fields=[['衣服',matchingMaterial('outfit',c)],['姿势',matchingMaterial('pose',c)],['脸部',matchingMaterial('face',c)],['画风',c.style||'']].filter(([,value])=>value);
+  box.innerHTML=fields.length?'<dl class="job-detail-fields">'+fields.map(([label,value])=>`<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('')+'</dl>':'<p class="muted">未使用带编号的素材。</p>';
  }catch(e){if(serial===detailSerial)box.innerHTML='<p role="status">'+esc(e.message)+'</p>'}
 }
 $('#previewDetails').onclick=()=>openJobDetails($('#previewDetails').dataset.jobId);

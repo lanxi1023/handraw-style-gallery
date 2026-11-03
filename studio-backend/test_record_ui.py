@@ -32,9 +32,13 @@ async def main():
             await page.locator('#previewDetails').click()
             await page.locator('#jobDetails .job-detail-fields').wait_for()
             text=await page.locator('#jobDetailsContent').inner_text()
-            assert '衣服编号' in text and '姿势编号' in text and '脸部编号' in text and '本次实际提示词' in text
+            assert '衣服' in text and '姿势' in text and '脸部' in text
+            assert '本次实际提示词' not in text and '提交模型' not in text
             assert '历史记录未保存编号' not in text,text
-            assert 'gpt-image2-1k' in text
+            labels=await page.locator('#jobDetails dt').all_text_contents()
+            assert all(label in ('衣服','姿势','脸部','画风') for label in labels)
+            values=await page.locator('#jobDetails dd').all_text_contents()
+            assert all(value and ' · ' not in value for value in values)
             if width==1440:await page.screenshot(path=str(ROOT/'data/verification/record-details.png'))
             await page.locator('#closeJobDetails').click()
             assert await page.locator('#preview').evaluate('(x)=>x.open')
@@ -49,6 +53,13 @@ async def main():
             assert '图片超过 30 天' in await page.locator('#jobs').inner_text()
             assert await page.locator('#jobs [data-details]').count()==1
             assert await page.locator('#openDownload').is_disabled()
+            await page.locator('#jobs [data-details]').click()
+            assert await page.locator('#jobDetails dt').count()==0
+            await page.locator('#closeJobDetails').click()
+            await page.evaluate("jobsCache=[{id:'f'.repeat(32),state:'expired',config:{face:'/face.png',face_id:'FACE-ONLY'}}];openJobDetails('f'.repeat(32))")
+            assert await page.locator('#jobDetails dt').all_text_contents()==['脸部']
+            assert await page.locator('#jobDetails dd').inner_text()=='FACE-ONLY'
+            await page.locator('#closeJobDetails').click()
             assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
             assert not errors,errors
             print('Record ordering, removed favorites, preview details, old IDs, new IDs and expiry UI:',width,'passed',flush=True)

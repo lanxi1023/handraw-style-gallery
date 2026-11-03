@@ -45,9 +45,9 @@ async def main():
             assert upload.exists() and (data/'images'/('0'*32)).exists()
             assert (data/'images'/('b'*32)).exists() and (data/'images'/('d'*32)).exists()
             details=await server.job_details('b'*32)
-            assert details['dimensions']=={'width':8,'height':12}
-            assert details['config']['outfit_id']=='SPR-0001' and details['prompt']=='Actual submitted prompt'
-            assert (await server.job_details('a'*32))['state']=='expired'
+            assert set(details)=={'id','config'}
+            assert details['config']['outfit_id']=='SPR-0001' and 'prompt' not in details['config']
+            assert (await server.job_details('a'*32))['config']['outfit_id']=='SPR-0001'
             try:await server.job_details('c'*32);raise AssertionError('Another account details leaked')
             except HTTPException as e:assert e.status_code==404
             with patch.object(server,'pool_request',AsyncMock()) as provider:
