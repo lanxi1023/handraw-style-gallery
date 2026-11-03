@@ -12,6 +12,11 @@ from pydantic import BaseModel, Field
 from starlette.background import BackgroundTask
 from bridge_identity import verified_owner
 
+# Windows installations may not register WebP. FileResponse otherwise falls back
+# to text/plain, which browsers block for authenticated cross-origin images.
+for extension, content_type in {'.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg'}.items():
+    mimetypes.add_type(content_type, extension)
+
 ROOT=Path(__file__).resolve().parent
 DATA=ROOT/'data'; UPLOADS=DATA/'uploads'; DB=DATA/'studio.sqlite3'
 POOL=Path(r'E:\号池'); SECRET=POOL/'data'/'local-secrets.json'
