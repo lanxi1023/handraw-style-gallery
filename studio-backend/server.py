@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.background import BackgroundTask
 from bridge_identity import verified_owner
+from retention import RETENTION_DAYS,expires_at,is_expired,cleanup as cleanup_images
 
 # Windows installations may not register WebP. FileResponse otherwise falls back
 # to text/plain, which browsers block for authenticated cross-origin images.
@@ -64,6 +65,8 @@ def initialize():
             c.execute("ALTER TABLE jobs ADD COLUMN config TEXT NOT NULL DEFAULT '{}'")
         if 'favorite' not in {r['name'] for r in c.execute('PRAGMA table_info(jobs)')}:
             c.execute('ALTER TABLE jobs ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0')
+        if 'expired_at' not in {r['name'] for r in c.execute('PRAGMA table_info(jobs)')}:
+            c.execute('ALTER TABLE jobs ADD COLUMN expired_at REAL')
         c.execute('CREATE TABLE IF NOT EXISTS assets (id TEXT PRIMARY KEY, url TEXT NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL, created_at REAL NOT NULL)')
         for table in ('jobs','assets'):
             if 'owner_id' not in {r['name'] for r in c.execute('PRAGMA table_info('+table+')')}:
@@ -189,6 +192,9 @@ class Item(BaseModel):
     pose:str|None=None
     face:str|None=None
     style:str|None=None
+    outfit_id:str|None=Field(default=None,max_length=120)
+    pose_id:str|None=Field(default=None,max_length=120)
+    face_id:str|None=Field(default=None,max_length=120)
 
 class Batch(BaseModel):
     items:list[Item]=Field(min_length=1,max_length=50)
@@ -200,17 +206,30 @@ def public_job(row):
     out['image_extension']=suffix if suffix in ('.png','.jpg','.webp') else '.png'
     try:out['config']=json.loads(row['config'])
     except (ValueError,TypeError):out['config']={}
+    out['image_expires_at']=expires_at(row) if row['state']=='completed' else None
+    if is_expired(row):out['state']='expired'
     return out
+
+async def retention_loop():
+    while True:
+        try:
+            await asyncio.to_thread(cleanup_images,DB,DATA,POOL/'runtime/fpb-app/data/pool-images',POOL/'runtime/fpb-app/data/fpbrowser.db')
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception('Generated image cleanup failed')
+        await asyncio.sleep(3600)
 
 @asynccontextmanager
 async def lifespan(app):
     initialize()
     worker=asyncio.create_task(dispatcher())
+    maintenance=asyncio.create_task(retention_loop())
     try:yield
     finally:
         worker.cancel()
+        maintenance.cancel()
         for task in list(app_jobs):task.cancel()
-        await asyncio.gather(worker,*list(app_jobs),return_exceptions=True)
+        await asyncio.gather(worker,maintenance,*list(app_jobs),return_exceptions=True)
 
 app=FastAPI(lifespan=lifespan,docs_url=None,redoc_url=None)
 
@@ -374,7 +393,23 @@ async def batches():
 async def jobs(batch_id:str=''):
     if batch_id and not re.fullmatch(r'[0-9a-f]{32}',batch_id):raise HTTPException(400,'批次编号无效')
     where='WHERE owner_id=?'+(' AND batch_id=?' if batch_id else '')
-    return {'items':[public_job(r) for r in rows('SELECT * FROM jobs '+where+' ORDER BY CASE WHEN state=\'completed\' THEN 0 ELSE 1 END, CASE WHEN state=\'completed\' THEN finished_at END ASC, created_at DESC LIMIT 200',(owner(),batch_id) if batch_id else (owner(),))]}
+    direction='ASC' if batch_id else 'DESC'
+    order=" ORDER BY CASE WHEN state='completed' THEN 0 WHEN state IN ('waiting','submitting','queued','processing') THEN 1 ELSE 2 END, CASE WHEN state='completed' THEN COALESCE(finished_at,created_at) END "+direction+", created_at DESC,id DESC LIMIT 200"
+    return {'items':[public_job(r) for r in rows('SELECT * FROM jobs '+where+order,(owner(),batch_id) if batch_id else (owner(),))]}
+
+@app.get('/api/jobs/{job_id}/details')
+async def job_details(job_id:str):
+    found=rows('SELECT * FROM jobs WHERE id=? AND owner_id=?',(job_id,owner()))
+    if not found:raise HTTPException(404,'作品不存在')
+    row=found[0];result=public_job(row)
+    result.update(prompt=row['prompt'],model='gpt-image2-1k',resolution='1K',retention_days=RETENTION_DAYS,dimensions=None)
+    cached=DATA/'images'/job_id
+    if row['state']=='completed' and not is_expired(row) and cached.is_file():
+        try:
+            from PIL import Image
+            with Image.open(cached) as image:result['dimensions']={'width':image.width,'height':image.height}
+        except (OSError,ValueError):pass
+    return result
 
 @app.post('/api/jobs/{job_id}/retry')
 async def retry(job_id:str):
@@ -392,6 +427,7 @@ async def image(job_id:str):
 async def cached_image(job_id:str):
     found=rows('SELECT * FROM jobs WHERE id=?',(job_id,))
     if not found or found[0]['state']!='completed':raise HTTPException(404,'图片尚未生成')
+    if is_expired(found[0]):raise HTTPException(410,'图片已超过 30 天自动清理，生成参数仍可在详情中查看。')
     if not re.fullmatch(r'[a-f0-9]{32}',job_id):raise HTTPException(400,'任务编号无效')
     cached=DATA/'images'/job_id
     if cached.is_file():
@@ -417,8 +453,9 @@ async def download_images(body:DownloadSelection):
     if len(set(ids))!=len(ids) or any(not re.fullmatch(r'[a-f0-9]{32}',x) for x in ids):
         raise HTTPException(400,'选择的图片编号无效')
     marks=','.join('?' for _ in ids)
-    found=rows(f'SELECT id,state FROM jobs WHERE owner_id=? AND id IN ({marks})',[owner(),*ids])
+    found=rows(f'SELECT id,state,finished_at,created_at,expired_at FROM jobs WHERE owner_id=? AND id IN ({marks})',[owner(),*ids])
     if len(found)!=len(ids):raise HTTPException(404,'作品不存在')
+    if any(is_expired(x) for x in found):raise HTTPException(410,'部分图片已超过 30 天自动清理，请重新选择。')
     if any(x['state']!='completed' for x in found):
         raise HTTPException(409,'部分图片尚未生成，请刷新后重新选择')
     archive=None

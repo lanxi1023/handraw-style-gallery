@@ -4,6 +4,7 @@ import io
 import json
 import sqlite3
 import tempfile
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
@@ -73,9 +74,11 @@ def main():
                     (data/'images').mkdir()
                     for jid in (ja,jb):
                         (data/'images'/jid).write_bytes(buffer.getvalue())
-                        server.update(jid,state='completed',finished_at=1)
+                        server.update(jid,state='completed',finished_at=time.time())
                     assert a.get('/api/jobs/'+ja+'/image').status_code==200
                     assert b.get('/api/jobs/'+ja+'/image?internal=true').status_code==404
+                    assert a.get('/api/jobs/'+ja+'/details').status_code==200
+                    assert b.get('/api/jobs/'+ja+'/details').status_code==404
                     assert b.post('/api/jobs/'+ja+'/favorite',json={'favorite':True}).status_code==404
                     assert b.post('/api/jobs/'+ja+'/retry').status_code==404
                     assert b.post('/api/jobs/'+ja+'/reference').status_code==404

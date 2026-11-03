@@ -95,6 +95,7 @@ def allowed_route(method, path):
     if method == 'GET':
         return bool(re.fullmatch(r'/api/(styles|handdraw-options|assets|batches|jobs)', path)
                     or re.fullmatch(r'/api/jobs/[a-f0-9]{32}/image', path)
+                    or re.fullmatch(r'/api/jobs/[a-f0-9]{32}/details', path)
                     or path in ('/catalog/data.js', '/catalog/extra-data.js')
                     or re.fullmatch(r'/(costume|poses|styles)/[^\\\x00]+\.(png|jpg|jpeg|webp)', path, re.I)
                     or re.fullmatch(r'/uploads/[a-f0-9]{32}\.jpg', path))
