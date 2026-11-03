@@ -30,7 +30,7 @@ def build(ready=False):
 <p id="remoteStatus" role="status">正在连接生图电脑…</p><button id="remoteReconnect" type="button" class="secondary">重新连接</button>
 </form></section>'''
     html = html.replace('</header>', '</header>' + gate)
-    html = html.replace('</body>', '<script>window.STUDIO_REMOTE=' + json.dumps({'apiOrigin': 'https://api.lanxi1023.com', 'enabled': ready}) + ';</script><script src="./static/network.js?v=20261103quickLink2"></script><script src="./static/remote-boot.js?v=20261103quickLink2"></script></body>')
+    html = html.replace('</body>', '<script>window.STUDIO_REMOTE=' + json.dumps({'apiOrigin': 'https://api.lanxi1023.com', 'enabled': ready}) + ';</script><script src="./static/network.js?v=20261103media1"></script><script src="./static/remote-boot.js?v=20261103media1"></script></body>')
     (OUT / 'index.html').write_text(html, encoding='utf-8')
     print('Built public frontend only:', OUT)
 
