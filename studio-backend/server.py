@@ -119,7 +119,8 @@ def style_info(style_id):
 def compile_item(item):
     if item.mode not in {'general','portrait','handdraw'}: raise ValueError('创作方式无效')
     if item.mode != 'portrait' and (item.outfit or item.pose or item.face): raise ValueError('人物素材只能用于人物写真')
-    if item.mode != 'handdraw' and (item.style or item.layout or item.color): raise ValueError('手绘选项只能用于手绘创作')
+    if item.mode != 'handdraw' and (item.layout or item.color): raise ValueError('图型和配色只能用于手绘创作')
+    if item.style and item.mode not in {'handdraw','portrait'}: raise ValueError('画风只能用于手绘创作或人物写真')
     parts=['用户要求：'+item.prompt.strip()]
     refs=[]
     for kind,url in [('衣装',item.outfit),('姿势',item.pose),('脸部',item.face)]:
@@ -159,6 +160,8 @@ def compile_item(item):
             refs.append(ORIGIN+'/styles/'+relative)
             parts.append((f'第 {len(refs)} 张图片仅作画风参考。' if language=='zh' else f'Image {len(refs)} is a style reference only. ')+(REFERENCE_ISOLATION_ZH if language=='zh' else REFERENCE_ISOLATION_EN))
     if item.mode=='handdraw' and item.references and any(term in (item.prompt+' '+ ' '.join(x.purpose for x in item.references)).lower() for term in ('转手绘','改图','改风格','转风格','重绘','redraw','style transfer')):
+        parts.append(REDRAW_INSTRUCTION_ZH if language=='zh' else REDRAW_INSTRUCTION_EN)
+    if item.mode=='portrait' and item.style and (item.outfit or item.pose or item.face):
         parts.append(REDRAW_INSTRUCTION_ZH if language=='zh' else REDRAW_INSTRUCTION_EN)
     if layout and layout['category']!='ecommerce':
         parts.append(GRAPHIC_TEXT_SUFFIX)
@@ -298,11 +301,14 @@ async def create_batch(body:Batch):
             if item.compiled_prompt is not None:
                 if not item.compiled_prompt.strip():raise ValueError('完整提示词不能为空')
                 prompt=item.compiled_prompt.strip()
-                if item.mode=='handdraw' and item.style:
+                if item.mode in {'handdraw','portrait'} and item.style:
                     _,decision=style_info(item.style)
                     isolation=REFERENCE_ISOLATION_ZH if detect_language(item.prompt)=='zh' else REFERENCE_ISOLATION_EN
                     if decision.get('use_reference_image') and isolation not in prompt:
                         prompt+='\n'+isolation
+                if item.mode=='portrait' and item.style and (item.outfit or item.pose or item.face):
+                    redraw=REDRAW_INSTRUCTION_ZH if detect_language(item.prompt)=='zh' else REDRAW_INSTRUCTION_EN
+                    if redraw not in prompt:prompt+='\n'+redraw
                 if item.mode=='handdraw' and item.references and any(term in (item.prompt+' '+' '.join(x.purpose for x in item.references)).lower() for term in ('转手绘','改图','改风格','转风格','重绘','redraw','style transfer')):
                     redraw=REDRAW_INSTRUCTION_ZH if detect_language(item.prompt)=='zh' else REDRAW_INSTRUCTION_EN
                     if redraw not in prompt:prompt+='\n'+redraw
