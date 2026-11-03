@@ -3,6 +3,16 @@
   const status = document.querySelector('#remoteStatus'), submit = document.querySelector('#remoteSubmit');
   const shell = document.querySelector('main'), nav = document.querySelector('header nav');
   let loaded = false;
+  // URL fragments are not sent to Pages, the tunnel, or HTTP access logs.
+  let quickAccess = null;
+  function readQuickAccess() {
+    const value = new URLSearchParams(location.hash.slice(1)).get('access');
+    if (value === null) return false;
+    quickAccess = value;
+    history.replaceState(null, '', location.pathname + location.search);
+    return true;
+  }
+  readQuickAccess();
   const authChannel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('studio-auth') : null;
   if (authChannel) authChannel.onmessage = event => {
     if (loaded && event.data?.userId !== window.STUDIO_USER?.id) location.reload();
@@ -21,7 +31,7 @@
       status.textContent = '正在载入素材和作品…';
       await script(studioMedia('/catalog/data.js'));
       await script(studioMedia('/catalog/extra-data.js'));
-      await script('./static/redesign.js?v=20261103portraitStyle1');
+      await script('./static/redesign.js?v=20261103quickLink1');
       loaded = true;
     }
     gate.hidden = true; shell.hidden = false; nav.hidden = false;
@@ -32,6 +42,15 @@
     submit.disabled = true;
     status.textContent = '正在连接生图电脑…';
     try {
+      if (quickAccess !== null) {
+        status.textContent = '正在通过专用链接进入工作台…';
+        const r = await studioFetch('/auth/shortcut', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token:quickAccess})});
+        const data = await r.json();
+        if (!r.ok) throw Error(data.detail || '快捷链接暂时无法使用，请重试或使用账号登录。');
+        quickAccess = null; studioSetCSRF(data.csrf);
+        authChannel?.postMessage({userId:data.user?.id}); await reveal(data.user);
+        return;
+      }
       const r = await studioFetch('/auth/session');
       if (!r.ok) throw Error('远程连接尚未就绪，请在生图电脑上完成配置。');
       const data = await r.json(); studioSetCSRF(data.csrf);
@@ -46,12 +65,14 @@
         body: JSON.stringify({username: form.elements.username.value.trim(), password: form.elements.password.value})});
       const data = await r.json();
       if (!r.ok) throw Error(data.detail || '登录失败，请稍后重试。');
-      form.elements.password.value = ''; studioSetCSRF(data.csrf);
+      form.elements.password.value = ''; quickAccess = null; studioSetCSRF(data.csrf);
       authChannel?.postMessage({userId: data.user?.id}); await reveal(data.user);
     } catch (error) {status.textContent = error.message;}
     finally {submit.disabled = false;}
   };
   document.querySelector('#remoteReconnect').onclick = connect;
+  // Reopening a bookmark in this tab may change only its fragment, without a reload.
+  window.addEventListener('hashchange', () => { if (readQuickAccess()) connect(); });
   document.querySelector('#remoteLogout').onclick = async () => {
     try {const r=await studioFetch('/auth/logout', {method: 'POST'}); if(!r.ok)throw Error('退出暂时未完成，请重试。'); authChannel?.postMessage({userId: null}); location.reload();}
     catch (error) {document.querySelector('#remoteConnection').textContent = error.message;}

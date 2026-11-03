@@ -46,3 +46,14 @@ DNSPod 中全部三条网站记录已核对保留为 DNS only；DNS 托管已切
 远程网关通过本机 `bridge-secret.txt` 对账号上下文签名，核心服务验证后再执行操作。不能把任意客户端传来的账号头当成已登录身份。仅本机回环访问保留管理员和号池读取参考文件的能力；电脑管理员始终能够通过本机文件管理数据。
 
 新版登录要求 `X-Studio-Client: accounts-v1`，旧网页会提示刷新；迁移时旧会话全部失效，避免旧版共用草稿逻辑串号。上线前执行 `test_account_isolation.py`，外网验证使用 `test_accounts_live.py`，两者不会使用用户上传的私人图片作为测试素材。
+
+
+### 无命令窗口启动（2026-11-03）
+
+开机登录任务改为 `pythonw.exe background.py run`。桌面入口也使用 pythonw；后台服务使用 `CREATE_NO_WINDOW` 启动并直接写日志，不再通过隐藏的 PowerShell 窗口启动。后台每 30 秒检查本机服务和固定通道，单实例锁避免重复启动。`start.ps1`、`run-background.ps1` 与 `start-remote.ps1` 保留为兼容入口。日志保存在本机 `data/background.log` 和各服务日志中。
+
+### 个人快捷链接（2026-11-03）
+
+`create_quick_link.py` 只在本机为指定的账号创建可重复使用的快捷入口，默认归属内部账号 `01`。链接是等同登录凭证的随机 256 位令牌，放在 URL fragment 中；前端读取后立即清除地址栏的 fragment，再通过 HTTPS POST 兑换普通的 HttpOnly 会话，不把密码或通行令牌放在查询参数、素材请求、localStorage 或公开文件中。服务端 `shortcuts` 表只保存令牌摘要和归属账号；原有账号隔离、CSRF 和接口白名单保持有效。链接无固定到期时间，可由本机工具 `--revoke` 停用，或 `--rotate` 更换；停用同时使由该链接签发的会话失效。停用工作台账号也会阻止快捷登录。
+
+原始链接仅写入本机 `data/quick-link-01.txt` 和 `E:\号池\工作台快捷链接.txt`，文件仅限当前 Windows 用户和 SYSTEM 访问。不得发布到 GitHub、网页源码或日志中。

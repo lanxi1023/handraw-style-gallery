@@ -47,6 +47,9 @@ def database():
             db.execute('CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, csrf TEXT NOT NULL, expires REAL NOT NULL)')
             if 'user_id' not in {r['name'] for r in db.execute('PRAGMA table_info(sessions)')}:
                 db.execute("ALTER TABLE sessions ADD COLUMN user_id TEXT NOT NULL DEFAULT ''")
+            if 'shortcut' not in {r['name'] for r in db.execute('PRAGMA table_info(sessions)')}:
+                db.execute("ALTER TABLE sessions ADD COLUMN shortcut TEXT NOT NULL DEFAULT ''")
+            db.execute('CREATE TABLE IF NOT EXISTS shortcuts(digest TEXT PRIMARY KEY,user_id TEXT NOT NULL,enabled INTEGER NOT NULL DEFAULT 1,created_at REAL NOT NULL,last_used REAL)')
             db.execute('CREATE TABLE IF NOT EXISTS attempts(ip TEXT NOT NULL, at REAL NOT NULL)')
             if 'account' not in {r['name'] for r in db.execute('PRAGMA table_info(attempts)')}:
                 db.execute("ALTER TABLE attempts ADD COLUMN account TEXT NOT NULL DEFAULT ''")
@@ -78,6 +81,11 @@ def session(request):
         row = db.execute('SELECT * FROM sessions WHERE token=? AND expires>?', (digest, time.time())).fetchone()
     if not row:
         return None
+    if row['shortcut']:
+        with database() as db:
+            link = db.execute('SELECT user_id FROM shortcuts WHERE digest=? AND enabled=1', (row['shortcut'],)).fetchone()
+        if not link or link['user_id'] != row['user_id']:
+            return None
     _, users = auth_records()
     user = next((x for x in users if x['id'] == row['user_id'] and x.get('enabled', True)), None)
     return {**dict(row), 'username': user['username']} if user else None
@@ -118,10 +126,10 @@ async def protect(request: Request, call_next):
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type, X-Studio-CSRF, X-Studio-Client, X-Studio-User'
         response.headers['Access-Control-Max-Age'] = '600'
     else:
-        public = request.url.path in ('/api/health', '/auth/session', '/auth/login')
+        public = request.url.path in ('/api/health', '/auth/session', '/auth/login', '/auth/shortcut')
         request.state.session = session(request)
         data, _ = auth_records()
-        if (data.get('version') == 2 and request.url.path in ('/auth/session', '/auth/login')
+        if (data.get('version') == 2 and request.url.path in ('/auth/session', '/auth/login', '/auth/shortcut')
                 and request.headers.get('x-studio-client') != CLIENT_VERSION):
             response = JSONResponse({'detail': '工作台已更新，请刷新网页后登录', 'code': 'update_required'}, status_code=426)
         elif not public and not request.state.session:
@@ -196,14 +204,54 @@ async def login(request: Request):
         valid = False
     if not valid:
         return JSONResponse({'detail': '用户名或密码不正确'}, status_code=401)
-    token, csrf = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
     with database() as db:
         db.execute('DELETE FROM attempts WHERE ip=? AND account=?', (ip, username))
+    return new_session(account)
+
+
+def new_session(account, shortcut=''):
+    now = time.time()
+    token, csrf = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
+    with database() as db:
         db.execute('DELETE FROM sessions WHERE expires<?', (now,))
-        db.execute('INSERT INTO sessions(token,csrf,expires,user_id) VALUES (?,?,?,?)', (hashlib.sha256(token.encode()).hexdigest(), csrf, now + SESSION_SECONDS, account['id']))
+        db.execute('INSERT INTO sessions(token,csrf,expires,user_id,shortcut) VALUES (?,?,?,?,?)', (hashlib.sha256(token.encode()).hexdigest(), csrf, now + SESSION_SECONDS, account['id'], shortcut))
     response = JSONResponse({'authenticated': True, 'csrf': csrf, 'user': {'id': account['id'], 'username': account['username']}})
     response.set_cookie(COOKIE, token, max_age=SESSION_SECONDS, secure=True, httponly=True, samesite='lax', path='/')
     return response
+
+
+@app.post('/auth/shortcut')
+async def shortcut_login(request: Request):
+    # The reusable credential arrives in a POST body, never a query string.
+    ip = request.headers.get('cf-connecting-ip') or (request.client.host if request.client else 'unknown')
+    now = time.time()
+    try:
+        raw = bytearray()
+        async for chunk in request.stream():
+            raw.extend(chunk)
+            if len(raw) > 2048:
+                raise ValueError()
+        token = json.loads(raw).get('token', '')
+        if not isinstance(token, str) or not re.fullmatch(r'[A-Za-z0-9_-]{43}', token):
+            raise ValueError()
+    except (ValueError, AttributeError):
+        return JSONResponse({'detail': '快捷链接无效或已停用，请使用账号登录'}, status_code=401)
+    digest = hashlib.sha256(token.encode()).hexdigest()
+    with database() as db:
+        db.execute('DELETE FROM attempts WHERE at<?', (now - 300,))
+        count = db.execute('SELECT COUNT(*) FROM attempts WHERE ip=? AND account=?', (ip, '@shortcut')).fetchone()[0]
+        if count >= 10:
+            return JSONResponse({'detail': '尝试次数较多，请五分钟后再试'}, status_code=429)
+        db.execute('INSERT INTO attempts(ip,at,account) VALUES (?,?,?)', (ip, now, '@shortcut'))
+        link = db.execute('SELECT * FROM shortcuts WHERE digest=? AND enabled=1', (digest,)).fetchone()
+    _, users = auth_records()
+    account = next((x for x in users if link and x['id'] == link['user_id'] and x.get('enabled', True)), None)
+    if not account:
+        return JSONResponse({'detail': '快捷链接无效或已停用，请使用账号登录'}, status_code=401)
+    with database() as db:
+        db.execute('UPDATE shortcuts SET last_used=? WHERE digest=?', (now, digest))
+        db.execute('DELETE FROM attempts WHERE ip=? AND account=?', (ip, '@shortcut'))
+    return new_session(account, shortcut=digest)
 
 
 @app.post('/auth/logout')
