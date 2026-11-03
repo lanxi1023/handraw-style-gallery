@@ -39,7 +39,7 @@
       status.textContent = '正在载入素材和作品…';
       await script(studioMedia('/catalog/data.js'));
       await script(studioMedia('/catalog/extra-data.js'));
-      await script('./static/redesign.js?v=20261103records2');
+      await script('./static/redesign.js?v=20261103combo1');
       loaded = true;
     }
     gate.hidden = true; shell.hidden = false; nav.hidden = false;

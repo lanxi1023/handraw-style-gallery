@@ -47,13 +47,25 @@ async def main():
             await page.locator('#draw').click()
             items=await page.evaluate('makeItems()')
             assert all(items[0].get(kind+'_id') for kind in ('outfit','pose','face'))
+            # Restoring a portrait adds one combination without replacing existing work.
+            original=await page.evaluate('''id => {
+                const j=jobsCache.find(x=>x.id===id);
+                return {id:j.id,config:j.config,ratio:j.ratio};
+            }''', info['portrait'])
+            before=await page.evaluate('''() => ({count:Number(drafts.portrait.count),first:JSON.stringify(drafts.portrait.combos[0])})''')
+            await page.locator('[data-add-combo=\"'+info['portrait']+'\"]').click()
+            restored=await page.evaluate('''() => ({count:Number(drafts.portrait.count),first:JSON.stringify(drafts.portrait.combos[0]),item:makeItems().at(-1),ratio:drafts.portrait.ratios[Number(drafts.portrait.count)-1]})''')
+            assert restored['count']==before['count']+1 and restored['first']==before['first']
+            assert all(restored['item'].get(k)==original['config'].get(k) for k in ('outfit','pose','face','style'))
+            assert restored['ratio']==original['ratio']
+            assert await page.locator('#jobs [data-details]').count()==0
             # Display an expired fixture without changing the real database.
             await page.evaluate("jobsCache=[{id:'e'.repeat(32),state:'expired',config:{prompt:'保留参数'},image_extension:'.png'}];renderJobs()")
             assert await page.locator('#jobs [data-preview]').count()==0
             assert '图片超过 30 天' in await page.locator('#jobs').inner_text()
-            assert await page.locator('#jobs [data-details]').count()==1
+            assert await page.locator('#jobs [data-details]').count()==0
             assert await page.locator('#openDownload').is_disabled()
-            await page.locator('#jobs [data-details]').click()
+            await page.evaluate("openJobDetails('e'.repeat(32))")
             assert await page.locator('#jobDetails dt').count()==0
             await page.locator('#closeJobDetails').click()
             await page.evaluate("jobsCache=[{id:'f'.repeat(32),state:'expired',config:{face:'/face.png',face_id:'FACE-ONLY'}}];openJobDetails('f'.repeat(32))")
